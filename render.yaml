@@ -1,0 +1,50 @@
+services:
+  # ─── Backend API Service (Render Web Service) ───
+  - type: web
+    name: cloudvault-backend
+    runtime: python
+    region: oregon
+    plan: free
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: SECRET_KEY
+        generateValue: true
+      - key: STORAGE_BACKEND
+        value: s3
+      - key: S3_REGION
+        value: us-east-1
+      - key: S3_SECURE
+        value: true
+      - key: S3_BUCKET_NAME
+        sync: false
+      - key: S3_ACCESS_KEY
+        sync: false
+      - key: S3_SECRET_KEY
+        sync: false
+      - key: DATABASE_URL
+        fromDatabase:
+          name: cloudvault-db
+          property: connectionString
+
+  # ─── Managed PostgreSQL (Render Free Tier) ───
+  - type: postgres
+    name: cloudvault-db
+    region: oregon
+    plan: free
+    ipAllowList: []
+
+  # ─── Frontend Web App (Render Static Site) ───
+  - type: static
+    name: cloudvault-frontend
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    publishDir: dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
