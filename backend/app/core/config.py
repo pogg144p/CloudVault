@@ -34,13 +34,21 @@ class Settings(BaseSettings):
     # Storage Quota: Default 10 GB
     DEFAULT_STORAGE_QUOTA_BYTES: int = 10 * 1024 * 1024 * 1024
 
-    # CORS
+    # CORS — add your Render frontend URL via FRONTEND_URL env var in production
+    FRONTEND_URL: str = ""
     BACKEND_CORS_ORIGINS: List[str] = [
         "http://localhost:5173",
         "http://127.0.0.1:5173",
         "http://localhost:3000",
         "http://127.0.0.1:3000",
     ]
+
+    @field_validator("BACKEND_CORS_ORIGINS", mode="before")
+    @classmethod
+    def assemble_cors_origins(cls, v: Union[List[str], str]) -> List[str]:
+        if isinstance(v, str):
+            return [i.strip() for i in v.split(",")]
+        return v
 
     model_config = SettingsConfigDict(
         env_file=".env",

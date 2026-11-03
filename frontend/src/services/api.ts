@@ -1,7 +1,13 @@
 import axios from 'axios';
 
+// In production (Render static site), VITE_API_BASE_URL points to the backend service URL.
+// In local dev, we use the Vite proxy so relative '/api/v1' works fine.
+const BASE_URL = import.meta.env.VITE_API_BASE_URL
+  ? `${import.meta.env.VITE_API_BASE_URL}/api/v1`
+  : '/api/v1';
+
 const api = axios.create({
-  baseURL: '/api/v1',
+  baseURL: BASE_URL,
   headers: {
     'Content-Type': 'application/json',
   },
