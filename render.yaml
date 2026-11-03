@@ -33,13 +33,6 @@ services:
           name: cloudvault-db
           property: connectionString
 
-  # ─── Managed PostgreSQL (Render Free Tier) ───
-  - type: postgres
-    name: cloudvault-db
-    region: oregon
-    plan: free
-    ipAllowList: []
-
   # ─── Frontend Web App (Render Static Site) ───
   - type: static
     name: cloudvault-frontend
@@ -53,3 +46,10 @@ services:
       - type: rewrite
         source: /*
         destination: /index.html
+
+databases:
+  # ─── Managed PostgreSQL (Render Free Tier) ───
+  - name: cloudvault-db
+    region: oregon
+    plan: free
+    ipAllowList: []
