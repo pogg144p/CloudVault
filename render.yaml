@@ -1,5 +1,5 @@
 services:
-  # ─── Backend API Service (Render Web Service) ───
+  # ─── Backend API (Render Web Service) ───
   - type: web
     name: cloudvault-backend
     runtime: python
@@ -32,20 +32,6 @@ services:
         fromDatabase:
           name: cloudvault-db
           property: connectionString
-
-  # ─── Frontend Web App (Render Static Site) ───
-  - type: static
-    name: cloudvault-frontend
-    rootDir: frontend
-    buildCommand: npm install && npm run build
-    publishDir: dist
-    envVars:
-      - key: VITE_API_BASE_URL
-        sync: false
-    routes:
-      - type: rewrite
-        source: /*
-        destination: /index.html
 
 databases:
   # ─── Managed PostgreSQL (Render Free Tier) ───
