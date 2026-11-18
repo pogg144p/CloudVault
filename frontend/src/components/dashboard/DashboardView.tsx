@@ -48,16 +48,16 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigateToFolder
 
   // --------------- derived data ---------------
 
-  const usedBytes = summary?.storage?.used_bytes ?? 2.4 * 1024 * 1024 * 1024;
-  const quotaBytes = summary?.storage?.quota_bytes ?? 15 * 1024 * 1024 * 1024;
-  const storagePct = summary?.storage?.percentage_used ?? Math.round((usedBytes / quotaBytes) * 100);
+  const usedBytes = summary?.storage?.used_bytes ?? 0;
+  const quotaBytes = summary?.storage?.quota_bytes ?? 100 * 1024 * 1024;
+  const storagePct = summary?.storage?.percentage_used ?? 0;
 
   const totalFiles =
     summary?.storage?.breakdown?.reduce((sum, b) => sum + b.files_count, 0) ??
     summary?.recent_files?.length ??
-    128;
+    0;
 
-  const folderCount = summary?.folder_categories?.length ?? 4;
+  const folderCount = summary?.folder_categories?.length ?? 0;
 
   const statCards: StatCard[] = [
     {
@@ -90,118 +90,14 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigateToFolder
     },
   ];
 
-  // Default folder cards matching the Dribbble design reference exactly
-  const folders: Folder[] = summary?.folder_categories?.length
-    ? summary.folder_categories
-    : [
-        {
-          id: 'f1',
-          user_id: 'u1',
-          name: 'Design',
-          path: '/Design/',
-          color: '#6366F1',
-          is_favorite: true,
-          is_deleted: false,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          files_count: 17,
-          total_size_bytes: 12 * 1024 * 1024 * 1024,
-        },
-        {
-          id: 'f2',
-          user_id: 'u1',
-          name: 'Documents',
-          path: '/Documents/',
-          color: '#10B981',
-          is_favorite: false,
-          is_deleted: false,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          files_count: 17,
-          total_size_bytes: 12 * 1024 * 1024 * 1024,
-        },
-        {
-          id: 'f3',
-          user_id: 'u1',
-          name: 'Music',
-          path: '/Music/',
-          color: '#F59E0B',
-          is_favorite: false,
-          is_deleted: false,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          files_count: 1200,
-          total_size_bytes: 24 * 1024 * 1024 * 1024,
-        },
-        {
-          id: 'f4',
-          user_id: 'u1',
-          name: 'Images',
-          path: '/Images/',
-          color: '#EF4444',
-          is_favorite: false,
-          is_deleted: false,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          files_count: 270,
-          total_size_bytes: 12 * 1024 * 1024 * 1024,
-        },
-      ];
+  // Show real folders from API, or empty list if no folders created yet
+  const folders: Folder[] = summary?.folder_categories ?? [];
 
-  // Quick access files matching reference
-  const quickAccess: FileItem[] = summary?.quick_access?.length
-    ? summary.quick_access
-    : [
-        {
-          id: 'qa1',
-          user_id: 'u1',
-          name: 'Building Image.jpeg',
-          mime_type: 'image/jpeg',
-          size_bytes: 4.2 * 1024 * 1024,
-          storage_key: 'building.jpg',
-          current_version: 1,
-          is_favorite: true,
-          is_deleted: false,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        },
-        {
-          id: 'qa2',
-          user_id: 'u1',
-          name: 'Product Video.mp4',
-          mime_type: 'video/mp4',
-          size_bytes: 48 * 1024 * 1024,
-          storage_key: 'product.mp4',
-          current_version: 1,
-          is_favorite: true,
-          is_deleted: false,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        },
-        {
-          id: 'qa3',
-          user_id: 'u1',
-          name: 'Customers.pdf',
-          mime_type: 'application/pdf',
-          size_bytes: 2.1 * 1024 * 1024,
-          storage_key: 'customers.pdf',
-          current_version: 1,
-          is_favorite: true,
-          is_deleted: false,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        },
-      ];
+  // Show real quick access files from API, or empty list
+  const quickAccess: FileItem[] = summary?.quick_access ?? [];
 
-  // Storage breakdown categories
-  const breakdownCategories = summary?.storage?.breakdown?.length
-    ? summary.storage.breakdown
-    : [
-        { category: 'Images', total_bytes: 1.2 * 1024 * 1024 * 1024, files_count: 48, color: '#6366F1' },
-        { category: 'Documents', total_bytes: 0.6 * 1024 * 1024 * 1024, files_count: 35, color: '#10B981' },
-        { category: 'Videos', total_bytes: 0.4 * 1024 * 1024 * 1024, files_count: 12, color: '#F59E0B' },
-        { category: 'Others', total_bytes: 0.2 * 1024 * 1024 * 1024, files_count: 33, color: '#EF4444' },
-      ];
+  // Storage breakdown categories — real data only
+  const breakdownCategories = summary?.storage?.breakdown ?? [];
 
   // --------------- skeleton ---------------
 
