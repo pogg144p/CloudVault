@@ -31,8 +31,8 @@ class Settings(BaseSettings):
     S3_REGION: str = "us-east-1"
     S3_SECURE: bool = False
 
-    # Storage Quota: Default 10 GB
-    DEFAULT_STORAGE_QUOTA_BYTES: int = 10 * 1024 * 1024 * 1024
+    # Storage Quota: 100 MB per user (supports ~10 users on Supabase free 1GB tier)
+    DEFAULT_STORAGE_QUOTA_BYTES: int = 100 * 1024 * 1024
 
     # CORS — add your Render frontend URL via FRONTEND_URL env var in production
     FRONTEND_URL: str = ""
