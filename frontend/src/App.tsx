@@ -6,11 +6,12 @@ import { FileExplorer } from './components/files/FileExplorer';
 import { AuthModal } from './components/auth/AuthModal';
 import { PublicShareView } from './components/files/PublicShareView';
 import { TrashView } from './components/files/TrashView';
+import { useAuth } from './context/AuthContext';
 
 export const App: React.FC = () => {
+  const { user, loading } = useAuth();
   const [currentTab, setCurrentTab] = useState('dashboard');
   const [selectedFolderId, setSelectedFolderId] = useState<string>('root');
-  const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
   // Detect ?share=TOKEN in the URL for public share page routing
@@ -29,13 +30,56 @@ export const App: React.FC = () => {
     window.history.replaceState({}, '', window.location.pathname);
   };
 
-  // If URL contains a share token, render the public share page (no auth required)
+  // Public share links work without auth
   if (publicShareToken) {
     return (
       <PublicShareView
         shareToken={publicShareToken}
         onExit={handleExitPublicShare}
       />
+    );
+  }
+
+  // Show spinner while checking auth state
+  if (loading) {
+    return (
+      <div className="flex h-screen w-screen items-center justify-center bg-[#F8FAFC]">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-10 h-10 rounded-2xl bg-indigo-600 flex items-center justify-center animate-pulse">
+            <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24">
+              <path stroke="currentColor" strokeWidth="2" strokeLinecap="round"
+                d="M12 4v4m0 8v4M4 12H8m8 0h4" />
+            </svg>
+          </div>
+          <p className="text-sm font-semibold text-slate-400">Loading CloudVault...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Not logged in → force login screen, nothing else accessible
+  if (!user) {
+    return (
+      <div className="flex h-screen w-screen items-center justify-center bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900">
+        {/* Background pattern */}
+        <div className="absolute inset-0 opacity-10"
+          style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, white 1px, transparent 0)', backgroundSize: '32px 32px' }}
+        />
+        <div className="relative z-10 w-full max-w-md px-4">
+          {/* Logo */}
+          <div className="text-center mb-8">
+            <div className="w-14 h-14 rounded-2xl bg-indigo-600 flex items-center justify-center mx-auto mb-4 shadow-lg shadow-indigo-500/30">
+              <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24">
+                <path stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"
+                  d="M12 16.5V9.75m0 0 3 3m-3-3-3 3M6.75 19.5a4.5 4.5 0 0 1-1.41-8.775 5.25 5.25 0 0 1 10.233-2.33 3 3 0 0 1 3.758 3.848A3.752 3.752 0 0 1 18 19.5H6.75Z" />
+              </svg>
+            </div>
+            <h1 className="text-3xl font-black text-white tracking-tight">CloudVault</h1>
+            <p className="text-sm text-indigo-300 mt-1">Secure cloud storage & file collaboration</p>
+          </div>
+          <AuthModal isOpen={true} onClose={() => {}} forced={true} />
+        </div>
+      </div>
     );
   }
 
@@ -91,7 +135,7 @@ export const App: React.FC = () => {
       <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
         <Header
           pageTitle={getPageTitle()}
-          onOpenAuth={() => setIsAuthOpen(true)}
+          onOpenAuth={() => {}}
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
           onUploadClick={handleUploadClick}
@@ -144,11 +188,7 @@ export const App: React.FC = () => {
         </main>
       </div>
 
-      {/* Auth Modal for Login / Register */}
-      <AuthModal
-        isOpen={isAuthOpen}
-        onClose={() => setIsAuthOpen(false)}
-      />
+      {/* No auth modal needed here — user is already logged in */}
     </div>
   );
 };
