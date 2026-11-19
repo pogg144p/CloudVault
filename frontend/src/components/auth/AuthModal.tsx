@@ -40,12 +40,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, forced = 
     }
   };
 
-  const handleDemoFill = () => {
-    setEmail('shakir260@gmail.com');
-    setName('AR Shakir');
-    setPassword('SecurePassword123!');
-  };
-
   return (
     <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4">
       <div className="bg-white rounded-3xl w-full max-w-md p-8 shadow-2xl relative border border-slate-100 animate-in fade-in zoom-in-95 duration-200">
@@ -89,7 +83,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, forced = 
                 <input
                   type="text"
                   required
-                  placeholder="e.g. AR Shakir"
+                  placeholder="Your Name"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
@@ -144,14 +138,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, forced = 
         </form>
 
         <div className="mt-5 pt-5 border-t border-slate-100 flex flex-col items-center space-y-3">
-          <button
-            type="button"
-            onClick={handleDemoFill}
-            className="text-[11px] font-semibold text-indigo-600 hover:text-indigo-800 bg-indigo-50/70 hover:bg-indigo-100/70 py-1.5 px-3 rounded-lg transition-colors"
-          >
-            ⚡ Auto-fill Demo Account (AR Shakir)
-          </button>
-
           <p className="text-xs text-slate-500">
             {isRegister ? 'Already have an account?' : "Don't have an account?"}{' '}
             <button

@@ -52,7 +52,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentTab, onTabChange }) => 
   const { user } = useAuth();
 
   const used  = user?.storage_used_bytes  ?? 0;
-  const quota = user?.storage_quota_bytes ?? 10 * 1024 * 1024 * 1024;
+  const quota = user?.storage_quota_bytes ?? 100 * 1024 * 1024;
   const pct   = quota > 0 ? Math.min(100, Math.round((used / quota) * 100)) : 0;
   const free  = Math.max(0, quota - used);
 

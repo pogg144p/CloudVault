@@ -1,6 +1,3 @@
-import sqlite3
-import uuid
-import datetime
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException, Request, status
 from fastapi.middleware.cors import CORSMiddleware
@@ -10,7 +7,6 @@ from app.api.v1.router import api_router
 from app.core.config import settings
 from app.core.database import init_db
 from app.core.metrics import PrometheusMiddleware, metrics_endpoint_handler
-from app.core.security import get_password_hash
 
 tags_metadata = [
     {
@@ -57,10 +53,7 @@ Welcome to the **CloudVault Interactive Backend Guide**. This API powers the ent
 ### 🚀 Quick Testing Walkthrough (3 Steps)
 
 1. **Step 1: Authenticate**
-   - Open **`Authentication`** below $\\to$ select `POST /api/v1/auth/login`.
-   - Click **Try it out** and use the pre-seeded demo credentials:
-     - **Email:** `shakir260@gmail.com`
-     - **Password:** `SecurePassword123!`
+   - Open **`Authentication`** below $\\to$ select `POST /api/v1/auth/register` (or `POST /api/v1/auth/login`).
    - Click **Execute** and copy the returned `access_token`.
 
 2. **Step 2: Authorize in Swagger**
@@ -82,42 +75,10 @@ Welcome to the **CloudVault Interactive Backend Guide**. This API powers the ent
 """
 
 
-def ensure_demo_user():
-    """Seeds the demo user AR Shakir if not present in the local database."""
-    if settings.DATABASE_URL.startswith("sqlite"):
-        try:
-            db_path = settings.DATABASE_URL.replace("sqlite+aiosqlite:///", "")
-            conn = sqlite3.connect(db_path)
-            cursor = conn.cursor()
-            cursor.execute("SELECT id FROM users WHERE email = 'shakir260@gmail.com'")
-            if not cursor.fetchone():
-                user_id = str(uuid.uuid4())
-                now = datetime.datetime.now(datetime.timezone.utc).isoformat()
-                pwd_hash = get_password_hash("SecurePassword123!")
-                quota = settings.DEFAULT_STORAGE_QUOTA_BYTES
-
-                cursor.execute("""
-                    INSERT INTO users (id, email, full_name, hashed_password, avatar_url, storage_quota_bytes, storage_used_bytes, is_active, is_superuser, created_at, updated_at)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """, (user_id, "shakir260@gmail.com", "AR Shakir", pwd_hash, None, quota, 0, 1, 0, now, now))
-
-                for name, color in [("Design", "#6366F1"), ("Documents", "#10B981"), ("Music", "#F59E0B"), ("Images", "#EF4444")]:
-                    cursor.execute("""
-                        INSERT INTO folders (id, user_id, parent_id, name, path, color, is_favorite, is_deleted, deleted_at, created_at, updated_at)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                    """, (str(uuid.uuid4()), user_id, None, name, f"/{name}/", color, 0, 0, None, now, now))
-
-                conn.commit()
-            conn.close()
-        except Exception:
-            pass
-
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Lifespan event handler: runs database table initialization on startup."""
     await init_db()
-    ensure_demo_user()
     yield
 
 
