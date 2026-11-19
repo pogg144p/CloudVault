@@ -32,9 +32,16 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, forced = 
       }
       onClose();
     } catch (err: any) {
-      setError(
-        err.response?.data?.detail || 'Authentication failed. Please check your inputs.'
-      );
+      const detail = err.response?.data?.detail;
+      if (typeof detail === 'string') {
+        setError(detail);
+      } else if (Array.isArray(detail) && detail.length > 0) {
+        setError(detail.map((d: any) => d.msg || JSON.stringify(d)).join(', '));
+      } else if (err.message) {
+        setError(err.message);
+      } else {
+        setError('Authentication failed. Please check your connection and inputs.');
+      }
     } finally {
       setLoading(false);
     }
