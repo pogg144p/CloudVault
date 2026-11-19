@@ -70,6 +70,23 @@ export const fileService = {
     return res.data;
   },
 
+  async listFiles(params?: {
+    folder_id?: string;
+    search?: string;
+    only_favorites?: boolean;
+    category?: string;
+  }): Promise<FileItem[]> {
+    const res = await api.get<FileItem[]>('/files/', { params });
+    return res.data;
+  },
+
+  async toggleFavorite(fileId: string, currentStatus: boolean): Promise<FileItem> {
+    const res = await api.put<FileItem>(`/files/${fileId}`, {
+      is_favorite: !currentStatus,
+    });
+    return res.data;
+  },
+
   async deleteFile(fileId: string): Promise<void> {
     await api.delete(`/files/${fileId}`);
   },

@@ -41,12 +41,13 @@ async def list_files(
     folder_id: Optional[str] = Query(None),
     search: Optional[str] = Query(None),
     only_favorites: bool = Query(False),
+    category: Optional[str] = Query(None),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(deps.get_current_user),
 ) -> Any:
     """List files for the user with optional folder filtering and keyword search."""
     return await FileService.list_files(
-        db, current_user.id, folder_id, search, only_favorites
+        db, current_user.id, folder_id, search, only_favorites, category
     )
 
 
@@ -70,21 +71,21 @@ async def download_file(
     file = await FileService.get_file(db, current_user.id, file_id)
     storage = get_storage_service()
 
-    try:
-        stream = storage.get_file_stream(file.storage_key)
-        return StreamingResponse(
-            stream,
-            media_type=file.mime_type,
-            headers={
-                "Content-Disposition": f'attachment; filename="{file.name}"',
-                "Content-Length": str(file.size_bytes),
-            },
-        )
-    except FileNotFoundError:
+    if not await storage.file_exists(file.storage_key):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="File binary data not found on storage backend.",
         )
+
+    stream = storage.get_file_stream(file.storage_key)
+    return StreamingResponse(
+        stream,
+        media_type=file.mime_type,
+        headers={
+            "Content-Disposition": f'attachment; filename="{file.name}"',
+            "Content-Length": str(file.size_bytes),
+        },
+    )
 
 
 @router.put("/{file_id}", response_model=FileResponse)
@@ -151,21 +152,21 @@ async def download_file_version(
     version = await FileService.get_version(db, current_user.id, file_id, version_number)
     storage = get_storage_service()
 
-    try:
-        stream = storage.get_file_stream(version.storage_key)
-        return StreamingResponse(
-            stream,
-            media_type=file.mime_type,
-            headers={
-                "Content-Disposition": f'attachment; filename="v{version_number}_{file.name}"',
-                "Content-Length": str(version.size_bytes),
-            },
-        )
-    except FileNotFoundError:
+    if not await storage.file_exists(version.storage_key):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Historical version binary not found on storage backend.",
         )
+
+    stream = storage.get_file_stream(version.storage_key)
+    return StreamingResponse(
+        stream,
+        media_type=file.mime_type,
+        headers={
+            "Content-Disposition": f'attachment; filename="v{version_number}_{file.name}"',
+            "Content-Length": str(version.size_bytes),
+        },
+    )
 
 
 @router.post("/{file_id}/versions/{version_number}/restore", response_model=FileResponse)
@@ -189,23 +190,28 @@ async def get_file_thumbnail(
     file = await FileService.get_file(db, current_user.id, file_id)
     storage = get_storage_service()
     thumb_key = f"{file.storage_key}_thumb.jpg"
-    try:
+
+    if await storage.file_exists(thumb_key):
         stream = storage.get_file_stream(thumb_key)
         return StreamingResponse(
             stream,
             media_type="image/jpeg",
             headers={"Cache-Control": "public, max-age=86400"},
         )
-    except FileNotFoundError:
-        # Fall back to original file if thumbnail not yet ready
-        try:
-            stream = storage.get_file_stream(file.storage_key)
-            return StreamingResponse(stream, media_type=file.mime_type)
-        except FileNotFoundError:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="File content not found.",
-            )
+
+    # Fall back to original file if thumbnail not yet ready
+    if await storage.file_exists(file.storage_key):
+        stream = storage.get_file_stream(file.storage_key)
+        return StreamingResponse(
+            stream,
+            media_type=file.mime_type,
+            headers={"Cache-Control": "public, max-age=86400"},
+        )
+
+    raise HTTPException(
+        status_code=status.HTTP_404_NOT_FOUND,
+        detail="File content not found.",
+    )
 
 
 @router.get("/{file_id}/preview")
@@ -217,18 +223,19 @@ async def preview_file(
     """Stream file content inline for in-browser preview (PDFs, images, text)."""
     file = await FileService.get_file(db, current_user.id, file_id)
     storage = get_storage_service()
-    try:
-        stream = storage.get_file_stream(file.storage_key)
-        return StreamingResponse(
-            stream,
-            media_type=file.mime_type,
-            headers={
-                "Content-Disposition": f'inline; filename="{file.name}"',
-                "Content-Length": str(file.size_bytes),
-            },
-        )
-    except FileNotFoundError:
+
+    if not await storage.file_exists(file.storage_key):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="File content not found on storage backend.",
         )
+
+    stream = storage.get_file_stream(file.storage_key)
+    return StreamingResponse(
+        stream,
+        media_type=file.mime_type,
+        headers={
+            "Content-Disposition": f'inline; filename="{file.name}"',
+            "Content-Length": str(file.size_bytes),
+        },
+    )

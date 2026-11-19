@@ -6,7 +6,7 @@ import uuid
 from datetime import datetime, timezone
 from typing import BinaryIO, List, Optional
 from fastapi import HTTPException, UploadFile, status
-from sqlalchemy import select
+from sqlalchemy import select, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.activity import ActivityLog
@@ -129,6 +129,7 @@ class FileService:
         folder_id: Optional[str] = None,
         search: Optional[str] = None,
         only_favorites: bool = False,
+        category: Optional[str] = None,
     ) -> List[File]:
         stmt = select(File).where(
             File.user_id == user_id,
@@ -140,6 +141,35 @@ class FileService:
             stmt = stmt.where(File.name.ilike(f"%{search.strip()}%"))
         if only_favorites:
             stmt = stmt.where(File.is_favorite == True)
+
+        if category in ("pictures", "images"):
+            stmt = stmt.where(File.mime_type.ilike("image/%"))
+        elif category == "videos":
+            stmt = stmt.where(File.mime_type.ilike("video/%"))
+        elif category in ("music", "audio"):
+            stmt = stmt.where(File.mime_type.ilike("audio/%"))
+        elif category == "documents":
+            stmt = stmt.where(
+                or_(
+                    File.mime_type.ilike("%pdf%"),
+                    File.mime_type.ilike("text/%"),
+                    File.mime_type.ilike("%document%"),
+                    File.mime_type.ilike("%sheet%"),
+                    File.mime_type.ilike("%presentation%"),
+                    File.mime_type.ilike("%msword%"),
+                    File.mime_type.ilike("%officedocument%"),
+                    File.name.ilike("%.pdf"),
+                    File.name.ilike("%.doc"),
+                    File.name.ilike("%.docx"),
+                    File.name.ilike("%.txt"),
+                    File.name.ilike("%.md"),
+                    File.name.ilike("%.xls"),
+                    File.name.ilike("%.xlsx"),
+                    File.name.ilike("%.csv"),
+                    File.name.ilike("%.ppt"),
+                    File.name.ilike("%.pptx"),
+                )
+            )
 
         stmt = stmt.order_by(File.created_at.desc())
         res = await db.execute(stmt)

@@ -6,6 +6,7 @@ import { FileExplorer } from './components/files/FileExplorer';
 import { AuthModal } from './components/auth/AuthModal';
 import { PublicShareView } from './components/files/PublicShareView';
 import { TrashView } from './components/files/TrashView';
+import { CategoryView } from './components/files/CategoryView';
 import { useAuth } from './context/AuthContext';
 
 export const App: React.FC = () => {
@@ -152,6 +153,8 @@ export const App: React.FC = () => {
         return 'Videos';
       case 'documents':
         return 'Documents';
+      case 'music':
+        return 'Music & Audio';
       case 'trash':
         return 'Trash';
       default:
@@ -198,20 +201,13 @@ export const App: React.FC = () => {
               searchQuery={searchQuery}
             />
           ) : currentTab === 'pictures' ? (
-            <FileExplorer
-              filterCategory="pictures"
-              searchQuery={searchQuery}
-            />
+            <CategoryView category="pictures" searchQuery={searchQuery} />
           ) : currentTab === 'videos' ? (
-            <FileExplorer
-              filterCategory="videos"
-              searchQuery={searchQuery}
-            />
+            <CategoryView category="videos" searchQuery={searchQuery} />
           ) : currentTab === 'documents' ? (
-            <FileExplorer
-              filterCategory="documents"
-              searchQuery={searchQuery}
-            />
+            <CategoryView category="documents" searchQuery={searchQuery} />
+          ) : currentTab === 'music' ? (
+            <CategoryView category="music" searchQuery={searchQuery} />
           ) : currentTab === 'trash' ? (
             <TrashView />
           ) : (

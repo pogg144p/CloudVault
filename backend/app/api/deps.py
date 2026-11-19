@@ -1,5 +1,5 @@
-from typing import AsyncGenerator
-from fastapi import Depends, HTTPException, status
+from typing import AsyncGenerator, Optional
+from fastapi import Depends, HTTPException, Query, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 from pydantic import ValidationError
@@ -12,20 +12,27 @@ from app.models.user import User
 from app.schemas.token import TokenPayload
 
 reusable_oauth2 = OAuth2PasswordBearer(
-    tokenUrl=f"{settings.API_V1_STR}/auth/login"
+    tokenUrl=f"{settings.API_V1_STR}/auth/login",
+    auto_error=False,
 )
 
 
 async def get_current_user(
     db: AsyncSession = Depends(get_db),
-    token: str = Depends(reusable_oauth2),
+    header_token: Optional[str] = Depends(reusable_oauth2),
+    query_token: Optional[str] = Query(None, alias="token"),
 ) -> User:
-    """Validates the JWT access token and retrieves the current authenticated user."""
+    """Validates the JWT access token and retrieves the current authenticated user.
+    Supports either Authorization: Bearer <token> header or ?token=<token> query parameter."""
+    token = header_token or query_token
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
+    if not token:
+        raise credentials_exception
+
     try:
         payload = jwt.decode(
             token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]

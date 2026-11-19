@@ -31,6 +31,11 @@ class StorageService(ABC):
         pass
 
     @abstractmethod
+    async def file_exists(self, storage_key: str) -> bool:
+        """Checks if a file exists on the storage backend."""
+        pass
+
+    @abstractmethod
     async def get_file_stream(self, storage_key: str) -> AsyncGenerator[bytes, None]:
         """Streams file bytes asynchronously in chunks."""
         pass
@@ -64,6 +69,10 @@ class LocalStorageService(StorageService):
             os.remove(full_path)
             return True
         return False
+
+    async def file_exists(self, storage_key: str) -> bool:
+        full_path = self.get_file_path(storage_key)
+        return os.path.exists(full_path)
 
     async def get_file_stream(self, storage_key: str) -> AsyncGenerator[bytes, None]:
         full_path = self.get_file_path(storage_key)
@@ -168,6 +177,17 @@ class S3StorageService(StorageService):
         try:
             await asyncio.to_thread(
                 self.client.remove_object,
+                bucket_name=self.bucket,
+                object_name=storage_key,
+            )
+            return True
+        except Exception:
+            return False
+
+    async def file_exists(self, storage_key: str) -> bool:
+        try:
+            await asyncio.to_thread(
+                self.client.stat_object,
                 bucket_name=self.bucket,
                 object_name=storage_key,
             )

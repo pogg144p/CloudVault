@@ -56,4 +56,31 @@ api.interceptors.response.use(
   }
 );
 
+export { BASE_URL };
+
+/**
+ * Returns an absolute URL for streaming or downloading a file asset
+ * with JWT authentication attached as a query parameter (for standard HTML tags like <img>, <iframe>, <video>).
+ */
+export function getAuthenticatedAssetUrl(path: string): string {
+  const token = localStorage.getItem('cloudvault_access_token');
+  const cleanPath = path.startsWith('/') ? path : `/${path}`;
+  const fullUrl = `${BASE_URL}${cleanPath}`;
+  if (!token) return fullUrl;
+  const separator = fullUrl.includes('?') ? '&' : '?';
+  return `${fullUrl}${separator}token=${encodeURIComponent(token)}`;
+}
+
+export function getFilePreviewUrl(fileId: string): string {
+  return getAuthenticatedAssetUrl(`/files/${fileId}/preview`);
+}
+
+export function getFileThumbnailUrl(fileId: string): string {
+  return getAuthenticatedAssetUrl(`/files/${fileId}/thumbnail`);
+}
+
+export function getFileDownloadUrl(fileId: string): string {
+  return getAuthenticatedAssetUrl(`/files/${fileId}/download`);
+}
+
 export default api;

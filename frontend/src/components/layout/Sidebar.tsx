@@ -9,6 +9,7 @@ import {
   Video,
   FileText,
   Trash2,
+  Music,
   Cloud,
   HardDrive,
   ChevronRight,
@@ -30,6 +31,7 @@ const NAV_SECTIONS = [
       { id: 'recent',     label: 'Recent',      icon: Clock },
       { id: 'favorites',  label: 'Favorites',   icon: Heart },
       { id: 'shared',     label: 'Shared',      icon: Share2 },
+      { id: 'trash',      label: 'Trash',       icon: Trash2 },
     ],
   },
   {
@@ -38,7 +40,7 @@ const NAV_SECTIONS = [
       { id: 'pictures',   label: 'Images',      icon: ImageIcon },
       { id: 'videos',     label: 'Videos',      icon: Video },
       { id: 'documents',  label: 'Documents',   icon: FileText },
-      { id: 'trash',      label: 'Trash',       icon: Trash2 },
+      { id: 'music',      label: 'Music',       icon: Music },
     ],
   },
 ];

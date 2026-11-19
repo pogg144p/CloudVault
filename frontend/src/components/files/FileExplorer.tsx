@@ -24,6 +24,7 @@ import {
 import { FileItem, Folder } from '../../types';
 import { fileService, Breadcrumb, FolderDetails } from '../../services/files';
 import { useAuth } from '../../context/AuthContext';
+import { getFileThumbnailUrl } from '../../services/api';
 import { ShareModal } from './ShareModal';
 import { VersionHistoryModal } from './VersionHistoryModal';
 import { FilePreviewModal } from './FilePreviewModal';
@@ -702,7 +703,7 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
                       <div className="w-full h-28 rounded-xl bg-slate-50 dark:bg-slate-800/80 flex items-center justify-center mb-3 overflow-hidden">
                         {file.mime_type.startsWith('image/') ? (
                           <img
-                            src={`/api/v1/files/${file.id}/thumbnail`}
+                            src={getFileThumbnailUrl(file.id)}
                             alt={file.name}
                             className="w-full h-full object-cover rounded-xl"
                             onError={(e) => {
