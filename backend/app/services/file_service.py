@@ -1,4 +1,5 @@
 import hashlib
+import io
 import mimetypes
 import os
 import uuid
@@ -42,31 +43,20 @@ class FileService:
         unique_id = uuid.uuid4().hex
         storage_key = f"{user.id}/{unique_id}_{clean_name}"
 
-        # Stream chunks, compute SHA-256 and size
-        hasher = hashlib.sha256()
-        total_size = 0
-        storage = get_storage_service()
-
-        # Write to temporary memory / local file storage
-        await storage.upload_file(upload_file.file, storage_key)
-
-        # Calculate exact size from written file
-        physical_path = storage.get_file_path(storage_key)
-        total_size = os.path.getsize(physical_path)
-
-        # Read back to compute hash (fast on local NVMe/SSD)
-        with open(physical_path, "rb") as f:
-            while chunk := f.read(1024 * 1024):
-                hasher.update(chunk)
-        checksum = hasher.hexdigest()
+        # Read stream directly to compute size & SHA-256 in memory
+        content = await upload_file.read()
+        total_size = len(content)
+        checksum = hashlib.sha256(content).hexdigest()
 
         # Quota enforcement check
         if user.storage_used_bytes + total_size > user.storage_quota_bytes:
-            await storage.delete_file(storage_key)
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"Storage quota exceeded. Your remaining quota is {max(0, user.storage_quota_bytes - user.storage_used_bytes)} bytes.",
             )
+
+        storage = get_storage_service()
+        await storage.upload_file(io.BytesIO(content), storage_key)
 
         mime_type = (
             upload_file.content_type
@@ -227,27 +217,21 @@ class FileService:
         new_version_num = file.current_version + 1
         storage_key = f"{user.id}/{unique_id}_v{new_version_num}_{clean_name}"
 
-        # Write new version to storage
-        hasher = hashlib.sha256()
-        storage = get_storage_service()
-        await storage.upload_file(upload_file.file, storage_key)
-
-        physical_path = storage.get_file_path(storage_key)
-        total_size = os.path.getsize(physical_path)
-
-        with open(physical_path, "rb") as f:
-            while chunk := f.read(1024 * 1024):
-                hasher.update(chunk)
-        checksum = hasher.hexdigest()
+        # Read stream directly to compute size & SHA-256 in memory
+        content = await upload_file.read()
+        total_size = len(content)
+        checksum = hashlib.sha256(content).hexdigest()
 
         # Quota check for size difference
         size_delta = total_size - file.size_bytes
         if user.storage_used_bytes + size_delta > user.storage_quota_bytes:
-            await storage.delete_file(storage_key)
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Storage quota exceeded for new version.",
             )
+
+        storage = get_storage_service()
+        await storage.upload_file(io.BytesIO(content), storage_key)
 
         # Update active file record
         file.current_version = new_version_num

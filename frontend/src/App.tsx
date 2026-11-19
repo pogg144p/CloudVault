@@ -10,8 +10,19 @@ import { useAuth } from './context/AuthContext';
 
 export const App: React.FC = () => {
   const { user, loading } = useAuth();
-  const [currentTab, setCurrentTab] = useState('dashboard');
-  const [selectedFolderId, setSelectedFolderId] = useState<string>('root');
+
+  // Helper to parse route from URL hash
+  const parseRouteFromHash = () => {
+    const hash = window.location.hash.replace(/^#/, '');
+    if (!hash) return { tab: 'dashboard', folderId: 'root' };
+    const [tabPart, queryPart] = hash.split('?');
+    const folderId = new URLSearchParams(queryPart || '').get('folder') || 'root';
+    return { tab: tabPart || 'dashboard', folderId };
+  };
+
+  const initialRoute = parseRouteFromHash();
+  const [currentTab, setCurrentTab] = useState(initialRoute.tab);
+  const [selectedFolderId, setSelectedFolderId] = useState<string>(initialRoute.folderId);
   const [searchQuery, setSearchQuery] = useState('');
 
   // Detect ?share=TOKEN in the URL for public share page routing
@@ -24,6 +35,38 @@ export const App: React.FC = () => {
       setPublicShareToken(token);
     }
   }, []);
+
+  // Sync with browser Back and Forward navigation buttons
+  useEffect(() => {
+    const handlePopState = (e: PopStateEvent) => {
+      if (e.state && e.state.tab) {
+        setCurrentTab(e.state.tab);
+        setSelectedFolderId(e.state.folderId || 'root');
+      } else {
+        const route = parseRouteFromHash();
+        setCurrentTab(route.tab);
+        setSelectedFolderId(route.folderId);
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  // Internal navigation helper that records browser history
+  const navigate = (tab: string, folderId: string = 'root', replace = false) => {
+    setCurrentTab(tab);
+    setSelectedFolderId(folderId);
+
+    const hashString = folderId !== 'root' ? `#${tab}?folder=${folderId}` : `#${tab}`;
+    const stateObj = { tab, folderId };
+
+    if (replace) {
+      window.history.replaceState(stateObj, '', hashString);
+    } else {
+      window.history.pushState(stateObj, '', hashString);
+    }
+  };
 
   const handleExitPublicShare = () => {
     setPublicShareToken(null);
@@ -84,13 +127,11 @@ export const App: React.FC = () => {
   }
 
   const handleNavigateToFolder = (folderId: string) => {
-    setSelectedFolderId(folderId);
-    setCurrentTab('all_files');
+    navigate('all_files', folderId);
   };
 
   const handleUploadClick = () => {
-    setSelectedFolderId('root');
-    setCurrentTab('all_files');
+    navigate('all_files', 'root');
   };
 
   const getPageTitle = () => {
@@ -124,10 +165,7 @@ export const App: React.FC = () => {
       <Sidebar
         currentTab={currentTab}
         onTabChange={(tab) => {
-          if (tab === 'all_files') {
-            setSelectedFolderId('root');
-          }
-          setCurrentTab(tab);
+          navigate(tab, 'root');
         }}
       />
 
@@ -147,6 +185,7 @@ export const App: React.FC = () => {
           ) : currentTab === 'all_files' ? (
             <FileExplorer
               initialFolderId={selectedFolderId}
+              onFolderChange={(folderId) => navigate('all_files', folderId)}
               searchQuery={searchQuery}
             />
           ) : currentTab === 'favorites' ? (

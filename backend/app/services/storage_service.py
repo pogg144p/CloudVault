@@ -80,11 +80,13 @@ class S3StorageService(StorageService):
     """Universal S3-compatible cloud storage driver (Supabase, AWS S3, Cloudflare R2, MinIO)."""
 
     def __init__(self):
-        endpoint = settings.S3_ENDPOINT_URL
+        endpoint = settings.S3_ENDPOINT_URL.strip()
+        path_prefix = ""
         if endpoint.startswith("http://") or endpoint.startswith("https://"):
             parsed = urlparse(endpoint)
             self.endpoint = parsed.netloc
             self.secure = parsed.scheme == "https"
+            path_prefix = parsed.path.rstrip("/")
         else:
             self.endpoint = endpoint
             self.secure = settings.S3_SECURE
@@ -97,6 +99,33 @@ class S3StorageService(StorageService):
             secure=self.secure,
             region=settings.S3_REGION,
         )
+
+        # Support sub-paths for services like Supabase Storage (/storage/v1/s3)
+        if path_prefix:
+            from minio.helpers import url_replace
+            orig_build = self.client._base_url.build
+            endpoint_host = self.endpoint
+
+            def custom_build(
+                method,
+                region,
+                bucket_name=None,
+                object_name=None,
+                query_params=None,
+            ):
+                res = orig_build(
+                    method=method,
+                    region=region,
+                    bucket_name=bucket_name,
+                    object_name=object_name,
+                    query_params=query_params,
+                )
+                clean_path = res.path if res.path.startswith("/") else f"/{res.path}"
+                new_path = f"{path_prefix}{clean_path}"
+                return url_replace(url=res, netloc=endpoint_host, path=new_path)
+
+            self.client._base_url.build = custom_build
+
         self._ensure_bucket_exists()
 
     def _ensure_bucket_exists(self):

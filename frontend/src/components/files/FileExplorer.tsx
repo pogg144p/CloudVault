@@ -30,6 +30,7 @@ import { FilePreviewModal } from './FilePreviewModal';
 
 interface FileExplorerProps {
   initialFolderId?: string;
+  onFolderChange?: (folderId: string) => void;
   searchQuery?: string;
   onlyFavorites?: boolean;
   filterCategory?: 'pictures' | 'videos' | 'documents' | 'all';
@@ -37,12 +38,24 @@ interface FileExplorerProps {
 
 export const FileExplorer: React.FC<FileExplorerProps> = ({
   initialFolderId = 'root',
+  onFolderChange,
   searchQuery = '',
   onlyFavorites = false,
   filterCategory = 'all',
 }) => {
   const { refreshUser } = useAuth();
   const [currentFolderId, setCurrentFolderId] = useState<string>(initialFolderId);
+
+  useEffect(() => {
+    if (initialFolderId !== currentFolderId) {
+      setCurrentFolderId(initialFolderId);
+    }
+  }, [initialFolderId]);
+
+  const handleFolderSelect = (folderId: string) => {
+    setCurrentFolderId(folderId);
+    onFolderChange?.(folderId);
+  };
   const [data, setData] = useState<FolderDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
@@ -250,7 +263,7 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
             <React.Fragment key={crumb.id || 'root'}>
               {idx === 0 ? (
                 <button
-                  onClick={() => setCurrentFolderId('root')}
+                  onClick={() => handleFolderSelect('root')}
                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all whitespace-nowrap ${
                     isLast
                       ? 'bg-indigo-50 text-indigo-600'
@@ -262,7 +275,7 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
                 </button>
               ) : (
                 <button
-                  onClick={() => crumb.id && setCurrentFolderId(crumb.id)}
+                  onClick={() => crumb.id && handleFolderSelect(crumb.id)}
                   className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all whitespace-nowrap ${
                     isLast
                       ? 'bg-indigo-50 text-indigo-600'
@@ -403,7 +416,7 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
                 {filteredFolders.map((fol) => (
                   <div
                     key={fol.id}
-                    onClick={() => setCurrentFolderId(fol.id)}
+                    onClick={() => handleFolderSelect(fol.id)}
                     className="relative bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-100 dark:border-slate-800 hover:shadow-lg dark:hover:shadow-slate-950/60 hover:scale-[1.02] transition-all duration-200 cursor-pointer group"
                   >
                     {/* Hover action buttons — top-right corner */}
