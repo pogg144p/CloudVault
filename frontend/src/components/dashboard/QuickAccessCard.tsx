@@ -15,15 +15,15 @@ export const QuickAccessCard: React.FC<QuickAccessCardProps> = ({
 }) => {
   const getIconAndColor = () => {
     if (file.mime_type.includes('image')) {
-      return { icon: Image, color: 'text-emerald-500', bg: 'bg-emerald-50' };
+      return { icon: Image, color: 'text-emerald-500 dark:text-emerald-400', bg: 'bg-emerald-50 dark:bg-emerald-950/50' };
     }
     if (file.mime_type.includes('video')) {
-      return { icon: Video, color: 'text-rose-500', bg: 'bg-rose-50' };
+      return { icon: Video, color: 'text-rose-500 dark:text-rose-400', bg: 'bg-rose-50 dark:bg-rose-950/50' };
     }
     if (file.mime_type.includes('pdf')) {
-      return { icon: FileText, color: 'text-indigo-500', bg: 'bg-indigo-50' };
+      return { icon: FileText, color: 'text-indigo-500 dark:text-indigo-400', bg: 'bg-indigo-50 dark:bg-indigo-950/50' };
     }
-    return { icon: File, color: 'text-slate-500', bg: 'bg-slate-50' };
+    return { icon: File, color: 'text-slate-500 dark:text-slate-400', bg: 'bg-slate-50 dark:bg-slate-800' };
   };
 
   const { icon: Icon, color, bg } = getIconAndColor();
@@ -31,10 +31,10 @@ export const QuickAccessCard: React.FC<QuickAccessCardProps> = ({
   return (
     <div
       onClick={onClick}
-      className="bg-white rounded-2xl p-3 border border-slate-100 hover:shadow-lg hover:shadow-slate-200/50 hover:border-slate-200 transition-all duration-300 cursor-pointer group flex flex-col"
+      className="bg-white dark:bg-slate-900 rounded-2xl p-3 border border-slate-100 dark:border-slate-800 hover:shadow-lg hover:shadow-slate-200/50 dark:hover:shadow-slate-950/50 hover:border-slate-200 dark:hover:border-slate-700 transition-all duration-300 cursor-pointer group flex flex-col"
     >
       {/* Thumbnail area */}
-      <div className="h-36 w-full rounded-xl overflow-hidden bg-gradient-to-br from-slate-100 to-slate-50 flex items-center justify-center relative mb-3">
+      <div className="h-36 w-full rounded-xl overflow-hidden bg-gradient-to-br from-slate-100 to-slate-50 dark:from-slate-800 dark:to-slate-850 flex items-center justify-center relative mb-3">
         {previewUrl ? (
           <img
             src={previewUrl}
@@ -53,7 +53,7 @@ export const QuickAccessCard: React.FC<QuickAccessCardProps> = ({
         <div className={`p-1 rounded-md ${bg}`}>
           <Icon className={`w-3.5 h-3.5 ${color}`} />
         </div>
-        <span className="text-xs font-semibold text-slate-700 truncate">
+        <span className="text-xs font-semibold text-slate-700 dark:text-slate-200 truncate">
           {file.name}
         </span>
       </div>

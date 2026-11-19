@@ -119,7 +119,7 @@ export const App: React.FC = () => {
   };
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-[#F8FAFC]">
+    <div className="flex h-screen w-screen overflow-hidden bg-[#F8FAFC] dark:bg-slate-950 transition-colors">
       {/* 1. Left Navigation Sidebar */}
       <Sidebar
         currentTab={currentTab}
@@ -141,7 +141,7 @@ export const App: React.FC = () => {
           onUploadClick={handleUploadClick}
         />
 
-        <main className="flex-1 overflow-y-auto p-6 lg:p-8 bg-gradient-to-br from-slate-50 via-white to-indigo-50/30 scroll-smooth">
+        <main className="flex-1 overflow-y-auto p-6 lg:p-8 bg-gradient-to-br from-slate-50 via-white to-indigo-50/30 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950/20 scroll-smooth transition-colors">
           {currentTab === 'dashboard' ? (
             <DashboardView onNavigateToFolder={handleNavigateToFolder} />
           ) : currentTab === 'all_files' ? (

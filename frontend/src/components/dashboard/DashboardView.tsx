@@ -64,29 +64,29 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigateToFolder
       label: 'Total Storage',
       value: `${formatBytes(usedBytes)} / ${formatBytes(quotaBytes)}`,
       icon: HardDrive,
-      iconBg: 'bg-indigo-50',
-      iconColor: 'text-indigo-600',
+      iconBg: 'bg-indigo-50 dark:bg-indigo-950/50',
+      iconColor: 'text-indigo-600 dark:text-indigo-400',
     },
     {
       label: 'Files',
       value: String(totalFiles),
       icon: FileText,
-      iconBg: 'bg-emerald-50',
-      iconColor: 'text-emerald-600',
+      iconBg: 'bg-emerald-50 dark:bg-emerald-950/50',
+      iconColor: 'text-emerald-600 dark:text-emerald-400',
     },
     {
       label: 'Shared',
       value: '0',
       icon: Share2,
-      iconBg: 'bg-amber-50',
-      iconColor: 'text-amber-600',
+      iconBg: 'bg-amber-50 dark:bg-amber-950/50',
+      iconColor: 'text-amber-600 dark:text-amber-400',
     },
     {
       label: 'Folders',
       value: String(folderCount),
       icon: FolderOpen,
-      iconBg: 'bg-rose-50',
-      iconColor: 'text-rose-600',
+      iconBg: 'bg-rose-50 dark:bg-rose-950/50',
+      iconColor: 'text-rose-600 dark:text-rose-400',
     },
   ];
 
@@ -142,14 +142,14 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigateToFolder
           return (
             <div
               key={card.label}
-              className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 flex flex-col gap-3 transition-shadow hover:shadow-md"
+              className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm p-5 flex flex-col gap-3 transition-all hover:shadow-md"
             >
               <div className={`w-11 h-11 rounded-full ${card.iconBg} flex items-center justify-center`}>
                 <Icon className={`w-5 h-5 ${card.iconColor}`} />
               </div>
               <div>
-                <span className="text-xl font-extrabold text-slate-800 leading-none">{card.value}</span>
-                <p className="mt-1 text-xs font-medium text-slate-400">{card.label}</p>
+                <span className="text-xl font-extrabold text-slate-800 dark:text-slate-100 leading-none">{card.value}</span>
+                <p className="mt-1 text-xs font-medium text-slate-400 dark:text-slate-500">{card.label}</p>
               </div>
             </div>
           );
@@ -159,17 +159,23 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigateToFolder
       {/* ─── 3. Folder Categories Grid ─── */}
       <section>
         <div className="flex items-center justify-between mb-4">
-          <h3 className="font-extrabold text-slate-800 text-lg">Folder Categories</h3>
+          <h3 className="font-extrabold text-slate-800 dark:text-slate-100 text-lg">Folder Categories</h3>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {folders.map((folder) => (
-            <FolderCard
-              key={folder.id}
-              folder={folder}
-              onClick={() => onNavigateToFolder && onNavigateToFolder(folder.id)}
-            />
-          ))}
-        </div>
+        {folders.length === 0 ? (
+          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 p-6 text-center text-xs font-semibold text-slate-400 dark:text-slate-500">
+            No folders created yet. Go to <button onClick={() => onNavigateToFolder && onNavigateToFolder('root')} className="text-indigo-600 dark:text-indigo-400 font-bold hover:underline">All Files</button> to create your first folder.
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {folders.map((folder) => (
+              <FolderCard
+                key={folder.id}
+                folder={folder}
+                onClick={() => onNavigateToFolder && onNavigateToFolder(folder.id)}
+              />
+            ))}
+          </div>
+        )}
       </section>
 
       {/* ─── 4. Quick Access + Storage Breakdown ─── */}
@@ -177,30 +183,38 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigateToFolder
         {/* Left — Quick Access (takes 2 cols) */}
         <div className="lg:col-span-2">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="font-extrabold text-slate-800 text-lg">Quick Access</h3>
+            <h3 className="font-extrabold text-slate-800 dark:text-slate-100 text-lg">Quick Access</h3>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            {quickAccess.map((file, idx) => {
-              const previewSamples = [
-                'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=600&q=80',
-                'https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=600&q=80',
-                'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&w=600&q=80',
-              ];
-              return (
-                <QuickAccessCard
-                  key={file.id}
-                  file={file}
-                  previewUrl={previewSamples[idx % previewSamples.length]}
-                  onClick={() => onNavigateToFolder && onNavigateToFolder('root')}
-                />
-              );
-            })}
-          </div>
+          {quickAccess.length === 0 ? (
+            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 p-8 text-center flex flex-col items-center justify-center min-h-[140px]">
+              <p className="text-xs font-semibold text-slate-400 dark:text-slate-500">
+                Starred and frequently used files will show up here
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {quickAccess.map((file, idx) => {
+                const previewSamples = [
+                  'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=600&q=80',
+                  'https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=600&q=80',
+                  'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&w=600&q=80',
+                ];
+                return (
+                  <QuickAccessCard
+                    key={file.id}
+                    file={file}
+                    previewUrl={previewSamples[idx % previewSamples.length]}
+                    onClick={() => onNavigateToFolder && onNavigateToFolder('root')}
+                  />
+                );
+              })}
+            </div>
+          )}
         </div>
 
         {/* Right — Storage Breakdown Ring */}
-        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 flex flex-col items-center">
-          <h3 className="font-extrabold text-slate-800 text-base mb-6 self-start">Storage</h3>
+        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm p-6 flex flex-col items-center">
+          <h3 className="font-extrabold text-slate-800 dark:text-slate-100 text-base mb-6 self-start">Storage</h3>
 
           {/* Donut Ring */}
           <div className="relative w-40 h-40 mx-auto">
@@ -208,7 +222,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigateToFolder
               <path
                 d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
                 fill="none"
-                stroke="#E2E8F0"
+                stroke="currentColor"
+                className="text-slate-200 dark:text-slate-800"
                 strokeWidth="3"
               />
               <path
@@ -221,8 +236,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigateToFolder
               />
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <span className="text-2xl font-extrabold text-slate-800">{storagePct}%</span>
-              <span className="text-xs text-slate-400">Used</span>
+              <span className="text-2xl font-extrabold text-slate-800 dark:text-slate-100">{storagePct}%</span>
+              <span className="text-xs text-slate-400 dark:text-slate-500">Used</span>
             </div>
           </div>
 
@@ -235,9 +250,9 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigateToFolder
                     className="inline-block w-2.5 h-2.5 rounded-full shrink-0"
                     style={{ backgroundColor: cat.color }}
                   />
-                  <span className="font-medium text-slate-600">{cat.category}</span>
+                  <span className="font-medium text-slate-600 dark:text-slate-300">{cat.category}</span>
                 </div>
-                <span className="font-semibold text-slate-800">{formatBytes(cat.total_bytes)}</span>
+                <span className="font-semibold text-slate-800 dark:text-slate-100">{formatBytes(cat.total_bytes)}</span>
               </div>
             ))}
           </div>

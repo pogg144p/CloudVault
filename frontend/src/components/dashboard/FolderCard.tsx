@@ -17,7 +17,7 @@ export const FolderCard: React.FC<FolderCardProps> = ({ folder, onClick }) => {
   return (
     <div
       onClick={onClick}
-      className="bg-white rounded-2xl p-5 border border-slate-100 hover:shadow-lg hover:shadow-slate-200/60 hover:border-slate-200 transition-all duration-300 cursor-pointer group relative overflow-hidden"
+      className="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-100 dark:border-slate-800 hover:shadow-lg hover:shadow-slate-200/60 dark:hover:shadow-slate-950/60 hover:border-slate-200 dark:hover:border-slate-700 transition-all duration-300 cursor-pointer group relative overflow-hidden"
     >
       {/* Subtle colored accent at top */}
       <div
@@ -36,17 +36,17 @@ export const FolderCard: React.FC<FolderCardProps> = ({ folder, onClick }) => {
           onClick={(e) => {
             e.stopPropagation();
           }}
-          className="p-1.5 text-slate-300 hover:text-slate-600 rounded-lg hover:bg-slate-50 transition-colors opacity-0 group-hover:opacity-100"
+          className="p-1.5 text-slate-300 hover:text-slate-600 dark:hover:text-slate-200 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors opacity-0 group-hover:opacity-100"
         >
           <MoreHorizontal className="w-4 h-4" />
         </button>
       </div>
 
       <div>
-        <h4 className="font-bold text-slate-800 text-sm mb-1.5 truncate group-hover:text-slate-900 transition-colors">
+        <h4 className="font-bold text-slate-800 dark:text-slate-100 text-sm mb-1.5 truncate group-hover:text-slate-900 dark:group-hover:text-white transition-colors">
           {folder.name}
         </h4>
-        <div className="flex items-center justify-between text-[11px] text-slate-400 font-medium">
+        <div className="flex items-center justify-between text-[11px] text-slate-400 dark:text-slate-500 font-medium">
           <span>{folder.files_count ?? 0} files</span>
           <span>{folder.total_size_bytes ? formatSize(folder.total_size_bytes) : '—'}</span>
         </div>

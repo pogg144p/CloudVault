@@ -279,9 +279,9 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
       </nav>
 
       {/* ──────────────────── 2. Action Bar ──────────────────── */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-4 border-b border-slate-200/60">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-4 border-b border-slate-200/60 dark:border-slate-800">
         {/* Left: folder info */}
-        <p className="text-xs font-medium text-slate-400">
+        <p className="text-xs font-medium text-slate-400 dark:text-slate-500">
           {filteredFolders.length} {filteredFolders.length === 1 ? 'folder' : 'folders'}{' '}
           <span className="mx-1">·</span>{' '}
           {filteredFiles.length} {filteredFiles.length === 1 ? 'file' : 'files'}
@@ -298,13 +298,13 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
           />
 
           {/* View toggle */}
-          <div className="flex items-center bg-slate-100 rounded-xl p-0.5">
+          <div className="flex items-center bg-slate-100 dark:bg-slate-800 rounded-xl p-0.5">
             <button
               onClick={() => setViewMode('list')}
               className={`p-1.5 rounded-lg transition-all ${
                 viewMode === 'list'
-                  ? 'bg-white text-indigo-600 shadow-sm'
-                  : 'text-slate-400 hover:text-slate-600'
+                  ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-sm'
+                  : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'
               }`}
               title="List view"
             >
@@ -314,8 +314,8 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
               onClick={() => setViewMode('grid')}
               className={`p-1.5 rounded-lg transition-all ${
                 viewMode === 'grid'
-                  ? 'bg-white text-indigo-600 shadow-sm'
-                  : 'text-slate-400 hover:text-slate-600'
+                  ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-sm'
+                  : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'
               }`}
               title="Grid view"
             >
@@ -325,9 +325,9 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
 
           <button
             onClick={() => setIsFolderModalOpen(true)}
-            className="flex items-center gap-1.5 px-4 py-2 bg-white border border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-bold rounded-xl transition-all shadow-sm"
+            className="flex items-center gap-1.5 px-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700/60 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl transition-all shadow-sm"
           >
-            <Plus className="w-4 h-4 text-indigo-600" />
+            <Plus className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
             <span>New Folder</span>
           </button>
 
@@ -373,19 +373,19 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
         </div>
       ) : isEmpty ? (
         /* ──────────────────── 6. Empty State ──────────────────── */
-        <div className="bg-white rounded-2xl p-16 border-2 border-dashed border-slate-200 text-center">
-          <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-indigo-50 flex items-center justify-center">
+        <div className="bg-white dark:bg-slate-900 rounded-2xl p-16 border-2 border-dashed border-slate-200 dark:border-slate-800 text-center">
+          <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-indigo-50 dark:bg-indigo-950/50 flex items-center justify-center">
             <UploadCloud className="w-8 h-8 text-indigo-400" />
           </div>
-          <h4 className="font-extrabold text-slate-700 text-base mb-1">
+          <h4 className="font-extrabold text-slate-700 dark:text-slate-200 text-base mb-1">
             This folder is empty
           </h4>
-          <p className="text-sm text-slate-400 max-w-sm mx-auto mb-6">
+          <p className="text-sm text-slate-400 dark:text-slate-500 max-w-sm mx-auto mb-6">
             Drop files here or click to upload your documents to CloudVault.
           </p>
           <button
             onClick={() => fileInputRef.current?.click()}
-            className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl transition-all shadow-md shadow-indigo-200 inline-flex items-center gap-2"
+            className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl transition-all shadow-md shadow-indigo-200 dark:shadow-none inline-flex items-center gap-2"
           >
             <UploadCloud className="w-4 h-4" />
             <span>Choose Files</span>
@@ -396,7 +396,7 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
           {/* ──────────────────── 4. Folders Grid ──────────────────── */}
           {filteredFolders.length > 0 && (
             <div>
-              <h4 className="text-xs font-extrabold uppercase tracking-wider text-slate-400 mb-3">
+              <h4 className="text-xs font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-3">
                 Folders ({filteredFolders.length})
               </h4>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
@@ -404,7 +404,7 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
                   <div
                     key={fol.id}
                     onClick={() => setCurrentFolderId(fol.id)}
-                    className="relative bg-white rounded-2xl p-4 border border-slate-100 hover:shadow-lg hover:scale-[1.02] transition-all duration-200 cursor-pointer group"
+                    className="relative bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-100 dark:border-slate-800 hover:shadow-lg dark:hover:shadow-slate-950/60 hover:scale-[1.02] transition-all duration-200 cursor-pointer group"
                   >
                     {/* Hover action buttons — top-right corner */}
                     <div className="absolute top-2.5 right-2.5 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -471,20 +471,20 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
             </h4>
 
             {filteredFiles.length === 0 ? (
-              <div className="bg-white rounded-2xl p-8 border border-slate-100 text-center text-xs text-slate-400">
+              <div className="bg-white dark:bg-slate-900 rounded-2xl p-8 border border-slate-100 dark:border-slate-800 text-center text-xs text-slate-400 dark:text-slate-500">
                 No files in this folder yet.
               </div>
             ) : viewMode === 'list' ? (
               /* ── List View ── */
-              <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden shadow-sm">
+              <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 overflow-hidden shadow-sm">
                 <table className="w-full text-left border-collapse">
                   <thead>
-                    <tr className="border-b border-slate-100 bg-slate-50/80 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                    <tr className="border-b border-slate-100 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-800/60 text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
                       <th className="py-3 px-4 w-8">
                         <input
                           type="checkbox"
                           disabled
-                          className="rounded border-slate-300"
+                          className="rounded border-slate-300 dark:border-slate-600"
                           title="Select all (coming soon)"
                         />
                       </th>
@@ -495,27 +495,27 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
                       <th className="py-3 px-4 text-right">Actions</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-50 text-xs">
+                  <tbody className="divide-y divide-slate-50 dark:divide-slate-800/80 text-xs">
                     {filteredFiles.map((file) => (
                       <tr
                         key={file.id}
-                        className="hover:bg-slate-50/80 transition-colors group"
+                        className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors group"
                       >
                         <td className="py-3 px-4">
                           <input
                             type="checkbox"
                             disabled
-                            className="rounded border-slate-300"
+                            className="rounded border-slate-300 dark:border-slate-600"
                           />
                         </td>
                         <td className="py-3 px-4">
                           <div className="flex items-center gap-3">
-                            <div className="p-2 rounded-xl bg-slate-50 shrink-0">
+                            <div className="p-2 rounded-xl bg-slate-50 dark:bg-slate-800 shrink-0">
                               {getFileIcon(file.mime_type)}
                             </div>
                             <span
                               onClick={() => setPreviewTarget(file)}
-                              className="font-bold text-slate-800 truncate max-w-xs hover:text-indigo-600 cursor-pointer transition-colors"
+                              className="font-bold text-slate-800 dark:text-slate-100 truncate max-w-xs hover:text-indigo-600 dark:hover:text-indigo-400 cursor-pointer transition-colors"
                               title="Click to preview"
                             >
                               {file.name}
@@ -597,7 +597,7 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
                 {filteredFiles.map((file) => (
                   <div
                     key={file.id}
-                    className="relative bg-white rounded-2xl p-4 border border-slate-100 hover:shadow-lg hover:scale-[1.02] transition-all duration-200 group"
+                    className="relative bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-100 dark:border-slate-800 hover:shadow-lg dark:hover:shadow-slate-950/60 hover:scale-[1.02] transition-all duration-200 group"
                   >
                     {/* Dots menu */}
                     <div className="absolute top-3 right-3">
@@ -606,21 +606,21 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
                           e.stopPropagation();
                           setOpenFileMenu(openFileMenu === file.id ? null : file.id);
                         }}
-                        className="p-1 text-slate-300 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
+                        className="p-1 text-slate-300 dark:text-slate-600 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
                       >
                         <MoreHorizontal className="w-4 h-4" />
                       </button>
 
                       {/* Dropdown */}
                       {openFileMenu === file.id && (
-                        <div className="absolute right-0 top-8 z-20 w-40 bg-white rounded-xl border border-slate-100 shadow-xl py-1">
+                        <div className="absolute right-0 top-8 z-20 w-40 bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 shadow-xl py-1">
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
                               setPreviewTarget(file);
                               setOpenFileMenu(null);
                             }}
-                            className="w-full flex items-center gap-2 px-3 py-2 text-xs text-slate-600 hover:bg-slate-50 transition-colors"
+                            className="w-full flex items-center gap-2 px-3 py-2 text-xs text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
                           >
                             <Eye className="w-3.5 h-3.5" /> Preview
                           </button>
@@ -630,7 +630,7 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
                               setVersionTarget(file);
                               setOpenFileMenu(null);
                             }}
-                            className="w-full flex items-center gap-2 px-3 py-2 text-xs text-slate-600 hover:bg-slate-50 transition-colors"
+                            className="w-full flex items-center gap-2 px-3 py-2 text-xs text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
                           >
                             <History className="w-3.5 h-3.5" /> Versions
                           </button>
@@ -640,7 +640,7 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
                               setShareTarget({ id: file.id, name: file.name, type: 'file' });
                               setOpenFileMenu(null);
                             }}
-                            className="w-full flex items-center gap-2 px-3 py-2 text-xs text-slate-600 hover:bg-slate-50 transition-colors"
+                            className="w-full flex items-center gap-2 px-3 py-2 text-xs text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
                           >
                             <Share2 className="w-3.5 h-3.5" /> Share
                           </button>
@@ -650,7 +650,7 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
                               handleDownload(file);
                               setOpenFileMenu(null);
                             }}
-                            className="w-full flex items-center gap-2 px-3 py-2 text-xs text-slate-600 hover:bg-slate-50 transition-colors"
+                            className="w-full flex items-center gap-2 px-3 py-2 text-xs text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
                           >
                             <Download className="w-3.5 h-3.5" /> Download
                           </button>
@@ -661,18 +661,18 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
                               setRenameValue(file.name);
                               setOpenFileMenu(null);
                             }}
-                            className="w-full flex items-center gap-2 px-3 py-2 text-xs text-slate-600 hover:bg-slate-50 transition-colors"
+                            className="w-full flex items-center gap-2 px-3 py-2 text-xs text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
                           >
                             <Edit2 className="w-3.5 h-3.5" /> Rename
                           </button>
-                          <div className="border-t border-slate-100 my-1" />
+                          <div className="border-t border-slate-100 dark:border-slate-700 my-1" />
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
                               handleDeleteFile(file.id, file.name);
                               setOpenFileMenu(null);
                             }}
-                            className="w-full flex items-center gap-2 px-3 py-2 text-xs text-rose-600 hover:bg-rose-50 transition-colors"
+                            className="w-full flex items-center gap-2 px-3 py-2 text-xs text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors"
                           >
                             <Trash2 className="w-3.5 h-3.5" /> Delete
                           </button>
@@ -686,7 +686,7 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
                       className="flex flex-col items-center text-center pt-2 pb-1 cursor-pointer"
                       title="Click to preview"
                     >
-                      <div className="w-full h-28 rounded-xl bg-slate-50 flex items-center justify-center mb-3 overflow-hidden">
+                      <div className="w-full h-28 rounded-xl bg-slate-50 dark:bg-slate-800/80 flex items-center justify-center mb-3 overflow-hidden">
                         {file.mime_type.startsWith('image/') ? (
                           <img
                             src={`/api/v1/files/${file.id}/thumbnail`}
@@ -700,7 +700,7 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
                           getFileIconLarge(file.mime_type)
                         )}
                       </div>
-                      <h5 className="text-xs font-bold text-slate-800 truncate w-full mb-1 hover:text-indigo-600 transition-colors">
+                      <h5 className="text-xs font-bold text-slate-800 dark:text-slate-100 truncate w-full mb-1 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
                         {file.name}
                       </h5>
                       <span className="text-[10px] text-slate-400 font-medium">

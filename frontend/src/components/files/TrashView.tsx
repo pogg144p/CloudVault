@@ -88,20 +88,20 @@ export const TrashView: React.FC = () => {
   return (
     <div className="space-y-6 max-w-6xl">
       {/* Header Banner */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-slate-200/60">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-slate-200/60 dark:border-slate-800">
         <div>
           <div className="flex items-center gap-2.5 mb-1">
-            <div className="p-2 rounded-xl bg-rose-50 text-rose-600">
+            <div className="p-2 rounded-xl bg-rose-50 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400">
               <Trash2 className="w-5 h-5" />
             </div>
-            <h2 className="text-xl font-extrabold text-slate-800">Recycle Bin</h2>
+            <h2 className="text-xl font-extrabold text-slate-800 dark:text-slate-100">Recycle Bin</h2>
           </div>
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-slate-400 dark:text-slate-500">
             Items in the trash can be restored to your active vault or permanently erased.
           </p>
         </div>
 
-        <div className="text-xs font-bold text-slate-500 bg-white px-3 py-1.5 rounded-xl border border-slate-200 shadow-sm">
+        <div className="text-xs font-bold text-slate-500 dark:text-slate-300 bg-white dark:bg-slate-800 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
           {totalItems} {totalItems === 1 ? 'item' : 'items'} in trash
         </div>
       </div>
@@ -112,14 +112,14 @@ export const TrashView: React.FC = () => {
           <p className="text-xs font-medium">Loading deleted items...</p>
         </div>
       ) : totalItems === 0 ? (
-        <div className="bg-white rounded-3xl p-16 border-2 border-dashed border-slate-200 text-center max-w-lg mx-auto mt-8">
-          <div className="w-14 h-14 rounded-2xl bg-slate-50 text-slate-300 flex items-center justify-center mx-auto mb-3">
+        <div className="bg-white dark:bg-slate-900 rounded-3xl p-16 border-2 border-dashed border-slate-200 dark:border-slate-800 text-center max-w-lg mx-auto mt-8">
+          <div className="w-14 h-14 rounded-2xl bg-slate-50 dark:bg-slate-800 text-slate-300 dark:text-slate-600 flex items-center justify-center mx-auto mb-3">
             <Trash2 className="w-7 h-7" />
           </div>
-          <h4 className="font-extrabold text-slate-700 text-base mb-1">
+          <h4 className="font-extrabold text-slate-700 dark:text-slate-200 text-base mb-1">
             Recycle Bin is Empty
           </h4>
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-slate-400 dark:text-slate-500">
             Deleted files and folders will appear here before being permanently removed.
           </p>
         </div>
@@ -128,7 +128,7 @@ export const TrashView: React.FC = () => {
           {/* Deleted Folders */}
           {data.folders.length > 0 && (
             <div>
-              <h4 className="text-xs font-extrabold uppercase tracking-wider text-slate-400 mb-3">
+              <h4 className="text-xs font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-3">
                 Deleted Folders ({data.folders.length})
               </h4>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -137,7 +137,7 @@ export const TrashView: React.FC = () => {
                   return (
                     <div
                       key={folder.id}
-                      className="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm flex items-center justify-between"
+                      className="bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-100 dark:border-slate-800 shadow-sm flex items-center justify-between"
                     >
                       <div className="flex items-center space-x-3 min-w-0">
                         <div
@@ -147,10 +147,10 @@ export const TrashView: React.FC = () => {
                           <FolderIcon className="w-5 h-5 fill-current" />
                         </div>
                         <div className="truncate">
-                          <h5 className="text-xs font-bold text-slate-800 truncate">
+                          <h5 className="text-xs font-bold text-slate-800 dark:text-slate-100 truncate">
                             {folder.name}
                           </h5>
-                          <span className="text-[10px] text-slate-400">
+                          <span className="text-[10px] text-slate-400 dark:text-slate-500">
                             Folder
                           </span>
                         </div>
@@ -160,7 +160,7 @@ export const TrashView: React.FC = () => {
                         <button
                           onClick={() => handleRestore(folder.id, 'folder', folder.name)}
                           disabled={isBusy}
-                          className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                          className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-slate-800 rounded-lg transition-colors"
                           title="Restore folder"
                         >
                           <RotateCcw className="w-4 h-4" />
@@ -168,7 +168,7 @@ export const TrashView: React.FC = () => {
                         <button
                           onClick={() => handlePurge(folder.id, 'folder', folder.name)}
                           disabled={isBusy}
-                          className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
+                          className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-lg transition-colors"
                           title="Delete permanently"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -187,33 +187,33 @@ export const TrashView: React.FC = () => {
               <h4 className="text-xs font-extrabold uppercase tracking-wider text-slate-400 mb-3">
                 Deleted Files ({data.files.length})
               </h4>
-              <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden shadow-sm">
+              <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 overflow-hidden shadow-sm">
                 <table className="w-full text-left border-collapse">
                   <thead>
-                    <tr className="border-b border-slate-100 bg-[#FAFBFD] text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                    <tr className="border-b border-slate-100 dark:border-slate-800 bg-[#FAFBFD] dark:bg-slate-800/60 text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
                       <th className="py-3 px-4">Name</th>
                       <th className="py-3 px-4">Size</th>
                       <th className="py-3 px-4">Deleted At</th>
                       <th className="py-3 px-4 text-right">Actions</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-50 text-xs">
+                  <tbody className="divide-y divide-slate-50 dark:divide-slate-800/80 text-xs">
                     {data.files.map((file) => {
                       const isBusy = actionLoading === file.id;
                       return (
-                        <tr key={file.id} className="hover:bg-slate-50/80 transition-colors">
+                        <tr key={file.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors">
                           <td className="py-3 px-4 flex items-center space-x-3">
-                            <div className="p-2 rounded-xl bg-slate-50 shrink-0">
+                            <div className="p-2 rounded-xl bg-slate-50 dark:bg-slate-800 shrink-0">
                               {getFileIcon(file.mime_type)}
                             </div>
-                            <span className="font-bold text-slate-800 truncate max-w-xs">
+                            <span className="font-bold text-slate-800 dark:text-slate-100 truncate max-w-xs">
                               {file.name}
                             </span>
                           </td>
-                          <td className="py-3 px-4 text-slate-500 font-medium">
+                          <td className="py-3 px-4 text-slate-500 dark:text-slate-400 font-medium">
                             {formatBytes(file.size_bytes)}
                           </td>
-                          <td className="py-3 px-4 text-slate-400">
+                          <td className="py-3 px-4 text-slate-400 dark:text-slate-500">
                             {file.deleted_at
                               ? new Date(file.deleted_at).toLocaleString()
                               : 'Recently'}
@@ -223,7 +223,7 @@ export const TrashView: React.FC = () => {
                               <button
                                 onClick={() => handleRestore(file.id, 'file', file.name)}
                                 disabled={isBusy}
-                                className="flex items-center gap-1 px-3 py-1.5 bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 text-slate-600 text-xs font-bold rounded-xl transition-colors disabled:opacity-50"
+                                className="flex items-center gap-1 px-3 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 hover:text-indigo-600 dark:hover:text-indigo-400 text-slate-600 dark:text-slate-300 text-xs font-bold rounded-xl transition-colors disabled:opacity-50"
                               >
                                 <RotateCcw className="w-3.5 h-3.5" />
                                 <span>Restore</span>
@@ -231,7 +231,7 @@ export const TrashView: React.FC = () => {
                               <button
                                 onClick={() => handlePurge(file.id, 'file', file.name)}
                                 disabled={isBusy}
-                                className="flex items-center gap-1 px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-bold rounded-xl transition-colors disabled:opacity-50"
+                                className="flex items-center gap-1 px-3 py-1.5 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/60 text-rose-600 dark:text-rose-400 text-xs font-bold rounded-xl transition-colors disabled:opacity-50"
                               >
                                 <Trash2 className="w-3.5 h-3.5" />
                                 <span>Purge</span>
