@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   LayoutDashboard,
   FolderOpen,
@@ -17,6 +17,7 @@ import {
   Activity,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { ProfileSettingsModal } from '../settings/ProfileSettingsModal';
 
 interface SidebarProps {
   currentTab: string;
@@ -26,6 +27,7 @@ interface SidebarProps {
 const NAV_SECTIONS = [
   {
     title: 'Menu',
+    adminOnly: false,
     items: [
       { id: 'dashboard',  label: 'Dashboard',  icon: LayoutDashboard },
       { id: 'all_files',  label: 'All Files',   icon: FolderOpen },
@@ -37,6 +39,7 @@ const NAV_SECTIONS = [
   },
   {
     title: 'Categories',
+    adminOnly: false,
     items: [
       { id: 'pictures',   label: 'Images',      icon: ImageIcon },
       { id: 'videos',     label: 'Videos',      icon: Video },
@@ -46,6 +49,7 @@ const NAV_SECTIONS = [
   },
   {
     title: 'Operations',
+    adminOnly: true,
     items: [
       { id: 'health',     label: 'System Health', icon: Activity },
     ],
@@ -59,6 +63,7 @@ function formatBytes(bytes: number): string {
 
 export const Sidebar: React.FC<SidebarProps> = ({ currentTab, onTabChange }) => {
   const { user } = useAuth();
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   const used  = user?.storage_used_bytes  ?? 0;
   const quota = user?.storage_quota_bytes ?? 100 * 1024 * 1024;
@@ -88,7 +93,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentTab, onTabChange }) => 
 
       {/* ── Navigation ── */}
       <nav className="flex-1 overflow-y-auto scrollbar-thin px-3 pt-4 pb-4 space-y-6">
-        {NAV_SECTIONS.map((section) => (
+        {NAV_SECTIONS.filter(s => !s.adminOnly || user?.is_superuser).map((section) => (
           <div key={section.title}>
             <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-400 dark:text-slate-500 px-3 mb-2">
               {section.title}
@@ -155,13 +160,18 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentTab, onTabChange }) => 
 
       {/* ── Settings link ── */}
       <div className="px-3 pb-4">
-        <button className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-semibold text-slate-400 hover:text-slate-700 hover:bg-slate-50 transition-all">
+        <button
+          onClick={() => setSettingsOpen(true)}
+          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-semibold text-slate-400 hover:text-slate-700 hover:bg-slate-50 transition-all"
+        >
           <span className="p-1.5 rounded-lg bg-slate-100 text-slate-400">
             <Settings className="w-4 h-4" />
           </span>
           <span>Settings</span>
         </button>
       </div>
+
+      <ProfileSettingsModal isOpen={settingsOpen} onClose={() => setSettingsOpen(false)} />
     </aside>
   );
 };
