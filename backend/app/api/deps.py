@@ -1,5 +1,5 @@
 from typing import AsyncGenerator, Optional
-from fastapi import Depends, HTTPException, Query, status
+from fastapi import Depends, HTTPException, Query, Request, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 from pydantic import ValidationError
@@ -18,13 +18,15 @@ reusable_oauth2 = OAuth2PasswordBearer(
 
 
 async def get_current_user(
+    request: Request,
     db: AsyncSession = Depends(get_db),
     header_token: Optional[str] = Depends(reusable_oauth2),
     query_token: Optional[str] = Query(None, alias="token"),
 ) -> User:
-    """Validates the JWT access token and retrieves the current authenticated user.
-    Supports either Authorization: Bearer <token> header or ?token=<token> query parameter."""
-    token = header_token or query_token
+    """Validates JWT from: 1) HttpOnly cookie, 2) Authorization header, 3) ?token= query param."""
+    # Priority: HttpOnly cookie > Authorization header > query param
+    token = request.cookies.get("cloudvault_access") or header_token or query_token
+
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",

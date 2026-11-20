@@ -66,6 +66,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = () => {
+    // Call backend to clear HttpOnly cookies
+    api.post('/auth/logout').catch(() => {});
     localStorage.removeItem('cloudvault_access_token');
     localStorage.removeItem('cloudvault_refresh_token');
     setUser(null);

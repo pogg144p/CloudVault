@@ -14,42 +14,46 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  // Send HttpOnly cookies automatically on every request
+  withCredentials: true,
 });
 
-// Request interceptor to attach JWT token
+// Request interceptor — attach Bearer token from localStorage as fallback
+// (cookie is preferred; this covers cases where cookie isn't available e.g. cross-origin dev)
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('cloudvault_access_token');
-  if (token && config.headers) {
+  if (token && config.headers && !config.headers.Authorization) {
     config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
 });
 
-// Response interceptor to handle 401s and token refresh
+// Response interceptor — handle 401s with silent token refresh via cookie
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
-      const refreshToken = localStorage.getItem('cloudvault_refresh_token');
-      if (refreshToken) {
-        try {
-          const res = await axios.post('/api/v1/auth/refresh', {
-            refresh_token: refreshToken,
-          });
-          const { access_token, refresh_token: newRefreshToken } = res.data;
+      try {
+        // Try cookie-based refresh first (no body needed — cookie sent automatically)
+        const res = await axios.post(
+          `${BASE_URL}/auth/refresh`,
+          {},
+          { withCredentials: true }
+        );
+        const { access_token } = res.data;
+        // Update localStorage fallback token
+        if (access_token) {
           localStorage.setItem('cloudvault_access_token', access_token);
-          if (newRefreshToken) {
-            localStorage.setItem('cloudvault_refresh_token', newRefreshToken);
-          }
           originalRequest.headers.Authorization = `Bearer ${access_token}`;
-          return api(originalRequest);
-        } catch (refreshErr) {
-          localStorage.removeItem('cloudvault_access_token');
-          localStorage.removeItem('cloudvault_refresh_token');
-          window.location.href = '/';
         }
+        return api(originalRequest);
+      } catch {
+        // Refresh failed — clear everything and redirect to login
+        localStorage.removeItem('cloudvault_access_token');
+        localStorage.removeItem('cloudvault_refresh_token');
+        window.location.href = '/';
       }
     }
     return Promise.reject(error);
@@ -60,7 +64,7 @@ export { BASE_URL };
 
 /**
  * Returns an absolute URL for streaming or downloading a file asset
- * with JWT authentication attached as a query parameter (for standard HTML tags like <img>, <iframe>, <video>).
+ * with JWT authentication attached as a query parameter (for <img>, <video>, <iframe> tags).
  */
 export function getAuthenticatedAssetUrl(path: string): string {
   const token = localStorage.getItem('cloudvault_access_token');

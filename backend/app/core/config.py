@@ -12,7 +12,7 @@ class Settings(BaseSettings):
     # Security
     SECRET_KEY: str = "cloudvault-super-secure-dev-secret-key-change-in-prod-xyz123"
     ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24  # 1 day for development convenience
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30  # 30 minutes — industry standard
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
 
     # Database
