@@ -7,6 +7,7 @@ import { AuthModal } from './components/auth/AuthModal';
 import { PublicShareView } from './components/files/PublicShareView';
 import { TrashView } from './components/files/TrashView';
 import { CategoryView } from './components/files/CategoryView';
+import { SystemHealthView } from './components/system/SystemHealthView';
 import { useAuth } from './context/AuthContext';
 
 export const App: React.FC = () => {
@@ -157,6 +158,8 @@ export const App: React.FC = () => {
         return 'Music & Audio';
       case 'trash':
         return 'Trash';
+      case 'health':
+        return 'System Health & DevOps Telemetry';
       default:
         return 'CloudVault';
     }
@@ -210,6 +213,8 @@ export const App: React.FC = () => {
             <CategoryView category="music" searchQuery={searchQuery} />
           ) : currentTab === 'trash' ? (
             <TrashView />
+          ) : currentTab === 'health' ? (
+            <SystemHealthView />
           ) : (
             <div className="bg-white rounded-3xl p-12 border border-slate-100 text-center max-w-xl mx-auto mt-12">
               <h2 className="text-xl font-bold text-slate-800 capitalize mb-2">

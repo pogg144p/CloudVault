@@ -14,6 +14,7 @@ import {
   HardDrive,
   ChevronRight,
   Settings,
+  Activity,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
@@ -41,6 +42,12 @@ const NAV_SECTIONS = [
       { id: 'videos',     label: 'Videos',      icon: Video },
       { id: 'documents',  label: 'Documents',   icon: FileText },
       { id: 'music',      label: 'Music',       icon: Music },
+    ],
+  },
+  {
+    title: 'Operations',
+    items: [
+      { id: 'health',     label: 'System Health', icon: Activity },
     ],
   },
 ];

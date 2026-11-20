@@ -1,0 +1,15 @@
+apiVersion: v2
+name: cloudvault
+description: Production Helm chart for CloudVault - Cloud-Native Secure Storage Platform
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
+keywords:
+  - storage
+  - cloud-native
+  - fastapi
+  - react
+  - s3
+maintainers:
+  - name: CloudVault DevOps Team
+    email: devops@cloudvault.internal

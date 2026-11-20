@@ -1,0 +1,101 @@
+# Default values for cloudvault.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+global:
+  environment: production
+  domain: cloudvault.example.com
+
+# ─── Backend Service Configuration ───
+backend:
+  replicaCount: 2
+  image:
+    repository: ghcr.io/cloudvault/backend
+    pullPolicy: IfNotPresent
+    tag: "1.0.0"
+  service:
+    type: ClusterIP
+    port: 8000
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 8
+    targetCPUUtilizationPercentage: 75
+    targetMemoryUtilizationPercentage: 80
+  env:
+    STORAGE_BACKEND: "s3"
+    S3_ENDPOINT_URL: "https://s3.amazonaws.com"
+    S3_BUCKET_NAME: "cloudvault-production-storage"
+    S3_REGION: "us-east-1"
+    S3_SECURE: "true"
+    DEFAULT_STORAGE_QUOTA_BYTES: "10737418240" # 10 GB
+  secretEnv:
+    SECRET_KEY: "replace-with-production-jwt-secret-min-32-chars"
+    DATABASE_URL: "postgresql+asyncpg://cloudvault_user:change_me_prod_db@postgres-rw:5432/cloudvault_db"
+    S3_ACCESS_KEY: "change_me_aws_access_key"
+    S3_SECRET_KEY: "change_me_aws_secret_key"
+
+# ─── Frontend Web Service Configuration ───
+frontend:
+  replicaCount: 2
+  image:
+    repository: ghcr.io/cloudvault/frontend
+    pullPolicy: IfNotPresent
+    tag: "1.0.0"
+  service:
+    type: ClusterIP
+    port: 80
+  resources:
+    limits:
+      cpu: 200m
+      memory: 256Mi
+    requests:
+      cpu: 50m
+      memory: 64Mi
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 6
+    targetCPUUtilizationPercentage: 80
+
+# ─── Ingress & TLS Configuration ───
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/proxy-body-size: "100m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "600"
+  hosts:
+    - host: cloudvault.example.com
+      paths:
+        - path: /api
+          pathType: Prefix
+          service: backend
+        - path: /metrics
+          pathType: Prefix
+          service: backend
+        - path: /
+          pathType: Prefix
+          service: frontend
+  tls:
+    - secretName: cloudvault-tls-cert
+      hosts:
+        - cloudvault.example.com
+
+# ─── Prometheus Monitoring ───
+monitoring:
+  serviceMonitor:
+    enabled: true
+    interval: 15s
+    scrapeTimeout: 10s
+    labels:
+      release: prometheus

@@ -13,7 +13,13 @@ from app.models.activity import ActivityLog
 from app.models.file import File, FileVersion
 from app.models.folder import Folder
 from app.models.user import User
-from app.schemas.file import FileUpdate
+from app.schemas.file import (
+    FileUpdate,
+    PresignedConfirmRequest,
+    PresignedDownloadResponse,
+    PresignedUploadRequest,
+    PresignedUrlResponse,
+)
 from app.services.storage_service import get_storage_service
 
 
@@ -106,6 +112,99 @@ class FileService:
         await db.commit()
         await db.refresh(db_file)
         return db_file
+
+    @staticmethod
+    async def generate_presigned_upload(
+        db: AsyncSession,
+        user: User,
+        req: PresignedUploadRequest,
+    ) -> PresignedUrlResponse:
+        """Issue pre-signed direct PUT URL for cloud storage (S3 / MinIO)."""
+        if user.storage_used_bytes + req.size_bytes > user.storage_quota_bytes:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Storage quota exceeded. Remaining: {max(0, user.storage_quota_bytes - user.storage_used_bytes)} bytes.",
+            )
+
+        clean_name = os.path.basename(req.filename)
+        storage_key = f"{user.id}/{uuid.uuid4().hex}_{clean_name}"
+
+        storage = get_storage_service()
+        upload_url = storage.generate_presigned_upload_url(storage_key, expires_in=900)
+
+        return PresignedUrlResponse(
+            upload_url=upload_url,
+            storage_key=storage_key,
+            method="PUT",
+            expires_in_seconds=900,
+            headers={"Content-Type": req.content_type},
+        )
+
+    @staticmethod
+    async def confirm_presigned_upload(
+        db: AsyncSession,
+        user: User,
+        req: PresignedConfirmRequest,
+    ) -> File:
+        """Register completed direct cloud upload and reconcile user quota."""
+        storage = get_storage_service()
+        if not await storage.file_exists(req.storage_key):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Object was not detected on cloud storage. Upload may have failed or timed out.",
+            )
+
+        clean_name = os.path.basename(req.filename)
+        mime_type = req.mime_type or mimetypes.guess_type(clean_name)[0] or "application/octet-stream"
+
+        db_file = File(
+            user_id=user.id,
+            folder_id=req.folder_id,
+            name=clean_name,
+            mime_type=mime_type,
+            size_bytes=req.size_bytes,
+            storage_key=req.storage_key,
+            current_version=1,
+        )
+        db.add(db_file)
+        await db.flush()
+
+        version = FileVersion(
+            file_id=db_file.id,
+            version_number=1,
+            storage_key=req.storage_key,
+            size_bytes=req.size_bytes,
+            uploaded_by=user.id,
+        )
+        db.add(version)
+
+        user.storage_used_bytes += req.size_bytes
+        db.add(user)
+
+        activity = ActivityLog(
+            user_id=user.id,
+            action="upload_file",
+            entity_type="file",
+            entity_name=clean_name,
+            entity_id=db_file.id,
+        )
+        db.add(activity)
+
+        await db.commit()
+        await db.refresh(db_file)
+        return db_file
+
+    @staticmethod
+    async def generate_presigned_download(
+        db: AsyncSession,
+        user_id: str,
+        file_id: str,
+    ) -> PresignedDownloadResponse:
+        """Generate secure temporary GET URL for direct cloud download."""
+        file = await FileService.get_file(db, user_id, file_id)
+        storage = get_storage_service()
+        download_url = storage.generate_presigned_download_url(file.storage_key, expires_in=900)
+        return PresignedDownloadResponse(download_url=download_url, expires_in_seconds=900)
 
     @staticmethod
     async def get_file(db: AsyncSession, user_id: str, file_id: str) -> File:

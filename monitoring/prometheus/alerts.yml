@@ -1,0 +1,35 @@
+groups:
+  - name: cloudvault_sla_alerts
+    rules:
+      # Alert when HTTP 5xx error rate exceeds 2% over 5 minutes
+      - alert: HighHttp5xxErrorRate
+        expr: (sum(rate(cloudvault_http_requests_total{status_code=~"5.."}[5m])) / sum(rate(cloudvault_http_requests_total[5m]))) * 100 > 2
+        for: 2m
+        labels:
+          severity: critical
+          tier: api
+        annotations:
+          summary: "High HTTP 5xx error rate on CloudVault API (> 2%)"
+          description: "CloudVault backend is experiencing {{ $value | printf \"%.2f\" }}% 5xx errors over the last 5 minutes."
+
+      # Alert when P95 latency exceeds 500ms
+      - alert: HighRequestLatencyP95
+        expr: histogram_quantile(0.95, sum(rate(cloudvault_http_request_duration_seconds_bucket[5m])) by (le)) > 0.5
+        for: 3m
+        labels:
+          severity: warning
+          tier: performance
+        annotations:
+          summary: "Elevated P95 latency detected (> 500ms)"
+          description: "The 95th percentile request latency has exceeded 500ms for over 3 minutes."
+
+      # Alert when API instance is down
+      - alert: BackendServiceDown
+        expr: up{job="cloudvault-backend"} == 0
+        for: 1m
+        labels:
+          severity: page
+          tier: infrastructure
+        annotations:
+          summary: "CloudVault FastAPI instance unreachable"
+          description: "Prometheus has failed to scrape the backend metrics endpoint for over 1 minute."

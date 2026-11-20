@@ -45,3 +45,31 @@ class FileResponse(FileBase):
 
 class FileDetailResponse(FileResponse):
     versions: List[FileVersionResponse] = []
+
+
+class PresignedUploadRequest(BaseModel):
+    filename: str = Field(..., min_length=1, max_length=255)
+    content_type: str = Field(default="application/octet-stream")
+    size_bytes: int = Field(..., gt=0)
+    folder_id: Optional[str] = None
+
+
+class PresignedUrlResponse(BaseModel):
+    upload_url: str
+    storage_key: str
+    method: str = "PUT"
+    expires_in_seconds: int = 900
+    headers: dict = {}
+
+
+class PresignedDownloadResponse(BaseModel):
+    download_url: str
+    expires_in_seconds: int = 900
+
+
+class PresignedConfirmRequest(BaseModel):
+    filename: str = Field(..., min_length=1, max_length=255)
+    storage_key: str
+    size_bytes: int = Field(..., gt=0)
+    mime_type: Optional[str] = None
+    folder_id: Optional[str] = None

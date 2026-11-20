@@ -44,8 +44,8 @@ async def test_register_duplicate_email(client: AsyncClient):
 async def test_login_flow_and_me(client: AsyncClient):
     # 1. Register user
     reg_payload = {
-        "email": "shakir260@gmail.com",
-        "full_name": "AR Shakir",
+        "email": "aakashdeep14122004@gmail.com",
+        "full_name": "Aakashdeep Dhall",
         "password": "SecurePassword123!",
     }
     reg_res = await client.post("/api/v1/auth/register", json=reg_payload)
@@ -53,7 +53,7 @@ async def test_login_flow_and_me(client: AsyncClient):
 
     # 2. Login with valid password
     login_payload = {
-        "email": "shakir260@gmail.com",
+        "email": "aakashdeep14122004@gmail.com",
         "password": "SecurePassword123!",
     }
     login_res = await client.post("/api/v1/auth/login", json=login_payload)
@@ -67,8 +67,8 @@ async def test_login_flow_and_me(client: AsyncClient):
     me_res = await client.get("/api/v1/auth/me", headers=headers)
     assert me_res.status_code == 200
     user_data = me_res.json()
-    assert user_data["email"] == "shakir260@gmail.com"
-    assert user_data["full_name"] == "AR Shakir"
+    assert user_data["email"] == "aakashdeep14122004@gmail.com"
+    assert user_data["full_name"] == "Aakashdeep Dhall"
     assert user_data["storage_quota_bytes"] == 10 * 1024 * 1024 * 1024
 
     # 4. Refresh token

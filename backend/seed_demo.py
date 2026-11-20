@@ -6,18 +6,19 @@ from app.models.user import User
 from app.models.folder import Folder
 from app.core.config import settings
 
-async def seed_demo_user():
+async def seed_admin_user():
     await init_db()
     async with AsyncSessionLocal() as db:
-        stmt = select(User).where(User.email == "shakir260@gmail.com")
+        stmt = select(User).where(User.email == "aakashdeep14122004@gmail.com")
         res = await db.execute(stmt)
         user = res.scalar_one_or_none()
         if not user:
-            print("Creating demo user: AR Shakir (shakir260@gmail.com)...")
+            print("Creating admin user: Aakashdeep Dhall (aakashdeep14122004@gmail.com)...")
             user = User(
-                email="shakir260@gmail.com",
-                full_name="AR Shakir",
+                email="aakashdeep14122004@gmail.com",
+                full_name="Aakashdeep Dhall",
                 hashed_password=get_password_hash("SecurePassword123!"),
+                is_superuser=True,
                 storage_quota_bytes=settings.DEFAULT_STORAGE_QUOTA_BYTES,
                 storage_used_bytes=0,
             )
@@ -40,9 +41,9 @@ async def seed_demo_user():
                 )
                 db.add(folder)
             await db.commit()
-            print("Successfully created demo user and default folders!")
+            print("Successfully created admin user and default folders!")
         else:
-            print("Demo user already exists.")
+            print("Admin user already exists.")
 
 if __name__ == "__main__":
-    asyncio.run(seed_demo_user())
+    asyncio.run(seed_admin_user())

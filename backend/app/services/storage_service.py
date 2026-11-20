@@ -1,4 +1,5 @@
 import asyncio
+from datetime import timedelta
 import io
 import os
 from abc import ABC, abstractmethod
@@ -38,6 +39,20 @@ class StorageService(ABC):
     @abstractmethod
     async def get_file_stream(self, storage_key: str) -> AsyncGenerator[bytes, None]:
         """Streams file bytes asynchronously in chunks."""
+        pass
+
+    @abstractmethod
+    def generate_presigned_upload_url(
+        self, storage_key: str, expires_in: int = 900
+    ) -> str:
+        """Generates a pre-signed URL for direct client upload (PUT)."""
+        pass
+
+    @abstractmethod
+    def generate_presigned_download_url(
+        self, storage_key: str, expires_in: int = 900
+    ) -> str:
+        """Generates a pre-signed URL for direct client download (GET)."""
         pass
 
 
@@ -83,6 +98,16 @@ class LocalStorageService(StorageService):
         async with aiofiles.open(full_path, "rb") as f:
             while chunk := await f.read(chunk_size):
                 yield chunk
+
+    def generate_presigned_upload_url(
+        self, storage_key: str, expires_in: int = 900
+    ) -> str:
+        return f"{settings.API_V1_STR}/files/upload"
+
+    def generate_presigned_download_url(
+        self, storage_key: str, expires_in: int = 900
+    ) -> str:
+        return f"{settings.API_V1_STR}/files/raw/{storage_key}"
 
 
 class S3StorageService(StorageService):
@@ -215,6 +240,24 @@ class S3StorageService(StorageService):
         finally:
             response.close()
             response.release_conn()
+
+    def generate_presigned_upload_url(
+        self, storage_key: str, expires_in: int = 900
+    ) -> str:
+        return self.client.presigned_put_object(
+            bucket_name=self.bucket,
+            object_name=storage_key,
+            expires=timedelta(seconds=expires_in),
+        )
+
+    def generate_presigned_download_url(
+        self, storage_key: str, expires_in: int = 900
+    ) -> str:
+        return self.client.presigned_get_object(
+            bucket_name=self.bucket,
+            object_name=storage_key,
+            expires=timedelta(seconds=expires_in),
+        )
 
 
 # Factory to return active storage backend

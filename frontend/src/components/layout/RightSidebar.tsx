@@ -19,7 +19,7 @@ export const RightSidebar: React.FC<RightSidebarProps> = () => {
 
   const sharedFolders = [
     { name: 'Sketch Files', email: 'mike@getnextdesign.com', time: '10 oct, 10:23pm' },
-    { name: 'AutoCAD Drawings', email: 'shakir@gmail.com', time: '10 oct, 10:23pm' },
+    { name: 'AutoCAD Drawings', email: 'aakashdeep14122004@gmail.com', time: '10 oct, 10:23pm' },
     { name: 'Master Spreadsheets', email: 'john@google.com', time: '10 oct, 10:23pm' },
     { name: 'Design Comps', email: 'kelvin@hunter.com', time: '10 oct, 10:23pm' },
     { name: 'Final Revisions', email: 'saim@purepixel.com', time: '10 oct, 10:23pm' },

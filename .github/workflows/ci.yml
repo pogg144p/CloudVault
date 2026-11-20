@@ -1,4 +1,4 @@
-name: CloudVault CI/CD Pipeline
+name: CloudVault CI/CD & DevSecOps Pipeline
 
 on:
   push:
@@ -45,7 +45,6 @@ jobs:
 
       - name: Code Quality & Lint Check (flake8)
         run: |
-          # Stop build if there are Python syntax errors or undefined names
           flake8 backend/app --count --select=E9,F63,F7,F82 --show-source --statistics
 
       - name: Run Backend Pytest Suite
@@ -81,9 +80,40 @@ jobs:
         working-directory: ./frontend
         run: npm run build
 
-  # ─── 3. Docker Image Verification ───
-  docker-build:
-    name: Docker Container Build Verification
+  # ─── 3. Infrastructure as Code & Helm Linting ───
+  infra-helm-ci:
+    name: Terraform & Helm Verification
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.7.0
+
+      - name: Terraform Format & Validate Check
+        working-directory: ./infra/terraform
+        run: |
+          terraform fmt -check
+          terraform init -backend=false
+          terraform validate
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: v3.14.0
+
+      - name: Helm Chart Lint & Template Validation
+        run: |
+          helm lint ./helm/cloudvault
+          helm template cloudvault-test ./helm/cloudvault
+
+  # ─── 4. Docker Image Build & Trivy DevSecOps Security Scan ───
+  docker-security-scan:
+    name: Container Build & Trivy Security Scan
     runs-on: ubuntu-latest
     needs: [backend-ci, frontend-ci]
 
@@ -98,12 +128,22 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: ./backend
-          push: false
-          tags: cloudvault-backend:ci-check
+          load: true
+          tags: cloudvault-backend:scan
+
+      - name: Run Trivy Vulnerability Scanner on Backend
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'cloudvault-backend:scan'
+          format: 'table'
+          exit-code: '0' # Non-blocking in CI demo, reports table
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH'
 
       - name: Build Frontend Docker Image
         uses: docker/build-push-action@v5
         with:
           context: ./frontend
-          push: false
-          tags: cloudvault-frontend:ci-check
+          load: true
+          tags: cloudvault-frontend:scan

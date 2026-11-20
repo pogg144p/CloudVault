@@ -6,7 +6,15 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api import deps
 from app.core.database import get_db
 from app.models.user import User
-from app.schemas.file import FileResponse, FileUpdate, FileVersionResponse
+from app.schemas.file import (
+    FileResponse,
+    FileUpdate,
+    FileVersionResponse,
+    PresignedConfirmRequest,
+    PresignedDownloadResponse,
+    PresignedUploadRequest,
+    PresignedUrlResponse,
+)
 from app.services.file_service import FileService
 from app.services.storage_service import get_storage_service
 from app.services.thumbnail_service import ThumbnailService
@@ -34,6 +42,45 @@ async def upload_file(
             created_file.mime_type,
         )
     return created_file
+
+
+@router.post("/presigned-upload", response_model=PresignedUrlResponse)
+async def get_presigned_upload_url(
+    req: PresignedUploadRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(deps.get_current_user),
+) -> Any:
+    """Generate pre-signed S3/MinIO PUT URL for direct-to-cloud file upload."""
+    return await FileService.generate_presigned_upload(db, current_user, req)
+
+
+@router.post("/confirm-upload", response_model=FileResponse, status_code=status.HTTP_201_CREATED)
+async def confirm_presigned_upload(
+    req: PresignedConfirmRequest,
+    background_tasks: BackgroundTasks,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(deps.get_current_user),
+) -> Any:
+    """Confirm that direct cloud upload finished and register file record."""
+    created_file = await FileService.confirm_presigned_upload(db, current_user, req)
+    if created_file.mime_type.startswith("image/"):
+        background_tasks.add_task(
+            ThumbnailService.process_thumbnail_async,
+            created_file.id,
+            created_file.storage_key,
+            created_file.mime_type,
+        )
+    return created_file
+
+
+@router.get("/{file_id}/presigned-download", response_model=PresignedDownloadResponse)
+async def get_presigned_download_url(
+    file_id: str,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(deps.get_current_user),
+) -> Any:
+    """Generate temporary pre-signed GET URL for direct-from-cloud file download."""
+    return await FileService.generate_presigned_download(db, current_user.id, file_id)
 
 
 @router.get("/", response_model=List[FileResponse])

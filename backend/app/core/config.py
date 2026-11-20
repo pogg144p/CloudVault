@@ -36,7 +36,7 @@ class Settings(BaseSettings):
 
     # CORS — add your Render frontend URL via FRONTEND_URL env var in production
     FRONTEND_URL: str = ""
-    BACKEND_CORS_ORIGINS: List[str] = [
+    BACKEND_CORS_ORIGINS: Union[List[str], str] = [
         "http://localhost:5173",
         "http://127.0.0.1:5173",
         "http://localhost:3000",
