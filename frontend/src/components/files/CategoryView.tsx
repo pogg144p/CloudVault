@@ -26,6 +26,8 @@ import { useAuth } from '../../context/AuthContext';
 import { ShareModal } from './ShareModal';
 import { VersionHistoryModal } from './VersionHistoryModal';
 import { FilePreviewModal } from './FilePreviewModal';
+import { CategoryMismatchModal, MismatchedFileItem } from './CategoryMismatchModal';
+import { classifyFile } from '../../utils/fileClassifier';
 
 export type FileCategory = 'pictures' | 'videos' | 'documents' | 'music';
 
@@ -135,6 +137,11 @@ export const CategoryView: React.FC<CategoryViewProps> = ({
   const [renameValue, setRenameValue] = useState('');
   const [openFileMenu, setOpenFileMenu] = useState<string | null>(null);
 
+  // Category Mismatch Modal State
+  const [mismatchModalOpen, setMismatchModalOpen] = useState(false);
+  const [pendingMismatches, setPendingMismatches] = useState<MismatchedFileItem[]>([]);
+  const [pendingMatches, setPendingMatches] = useState<File[]>([]);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const loadFiles = async () => {
@@ -166,19 +173,64 @@ export const CategoryView: React.FC<CategoryViewProps> = ({
     }
   }, [openFileMenu]);
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const uploadFiles = e.target.files;
-    if (!uploadFiles || uploadFiles.length === 0) return;
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selected = e.target.files;
+    if (!selected || selected.length === 0) return;
 
+    const filesArray = Array.from(selected);
+    const matches: File[] = [];
+    const mismatches: MismatchedFileItem[] = [];
+
+    filesArray.forEach((f) => {
+      const detected = classifyFile(f.name, f.type);
+      if (detected === category) {
+        matches.push(f);
+      } else {
+        mismatches.push({ file: f, detectedCategory: detected });
+      }
+    });
+
+    if (mismatches.length > 0) {
+      setPendingMismatches(mismatches);
+      setPendingMatches(matches);
+      setMismatchModalOpen(true);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    } else {
+      executeUpload(matches, []);
+    }
+  };
+
+  const executeUpload = async (directFiles: File[], autoSortFiles: File[]) => {
     setUploading(true);
     setUploadProgress(0);
 
+    const totalCount = directFiles.length + autoSortFiles.length;
+    let completed = 0;
+
     try {
-      for (let i = 0; i < uploadFiles.length; i++) {
-        await fileService.uploadFile(uploadFiles[i], null, (pct) => {
-          setUploadProgress(pct);
+      // 1. Upload files matching current category
+      for (const f of directFiles) {
+        await fileService.uploadFile(f, null, (pct) => {
+          const overall = Math.round(((completed + pct / 100) / totalCount) * 100);
+          setUploadProgress(overall);
         });
+        completed++;
       }
+
+      // 2. Upload auto-sorted files to their designated area
+      for (const f of autoSortFiles) {
+        await fileService.uploadFile(
+          f,
+          null,
+          (pct) => {
+            const overall = Math.round(((completed + pct / 100) / totalCount) * 100);
+            setUploadProgress(overall);
+          },
+          true
+        );
+        completed++;
+      }
+
       await loadFiles();
       await refreshUser();
     } catch (err: any) {
@@ -186,8 +238,32 @@ export const CategoryView: React.FC<CategoryViewProps> = ({
     } finally {
       setUploading(false);
       setUploadProgress(0);
+      setPendingMatches([]);
+      setPendingMismatches([]);
+      setMismatchModalOpen(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
     }
+  };
+
+  const handleAutoSortConfirm = () => {
+    const autoSortList = pendingMismatches.map((m) => m.file);
+    executeUpload(pendingMatches, autoSortList);
+  };
+
+  const handleSkipConfirm = () => {
+    if (pendingMatches.length > 0) {
+      executeUpload(pendingMatches, []);
+    } else {
+      setPendingMatches([]);
+      setPendingMismatches([]);
+      setMismatchModalOpen(false);
+    }
+  };
+
+  const handleCancelMismatch = () => {
+    setPendingMatches([]);
+    setPendingMismatches([]);
+    setMismatchModalOpen(false);
   };
 
   const handleToggleFavorite = async (file: FileItem) => {
@@ -284,9 +360,8 @@ export const CategoryView: React.FC<CategoryViewProps> = ({
             ref={fileInputRef}
             type="file"
             multiple
-            accept={config.accept}
             className="hidden"
-            onChange={handleFileUpload}
+            onChange={handleFileSelect}
           />
           <button
             onClick={() => fileInputRef.current?.click()}
@@ -656,6 +731,16 @@ export const CategoryView: React.FC<CategoryViewProps> = ({
           </form>
         </div>
       )}
+      {/* Category Mismatch & Auto-Sort Modal */}
+      <CategoryMismatchModal
+        isOpen={mismatchModalOpen}
+        currentCategory={category}
+        mismatchedFiles={pendingMismatches}
+        matchingCount={pendingMatches.length}
+        onAutoSort={handleAutoSortConfirm}
+        onSkip={handleSkipConfirm}
+        onCancel={handleCancelMismatch}
+      />
     </div>
   );
 };

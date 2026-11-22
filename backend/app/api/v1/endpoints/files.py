@@ -27,13 +27,14 @@ async def upload_file(
     background_tasks: BackgroundTasks,
     file: UploadFile = FastAPIFile(...),
     folder_id: Optional[str] = Form(None),
+    auto_sort: bool = Form(False),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(deps.get_current_user),
 ) -> Any:
-    """Stream and upload a file to CloudVault storage, validating quota and computing checksum."""
+    """Stream and upload a file to CloudVault storage, validating quota, auto-sorting if requested."""
     if folder_id == "" or folder_id == "null":
         folder_id = None
-    created_file = await FileService.upload_file(db, current_user, file, folder_id)
+    created_file = await FileService.upload_file(db, current_user, file, folder_id, auto_sort=auto_sort)
     if created_file.mime_type.startswith("image/"):
         background_tasks.add_task(
             ThumbnailService.process_thumbnail_async,

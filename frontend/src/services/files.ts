@@ -43,12 +43,16 @@ export const fileService = {
   async uploadFile(
     file: File,
     folderId?: string | null,
-    onProgress?: (percent: number) => void
+    onProgress?: (percent: number) => void,
+    autoSort?: boolean
   ): Promise<FileItem> {
     const formData = new FormData();
     formData.append('file', file);
     if (folderId) {
       formData.append('folder_id', folderId);
+    }
+    if (autoSort) {
+      formData.append('auto_sort', 'true');
     }
 
     const res = await api.post<FileItem>('/files/upload', formData, {

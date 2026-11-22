@@ -22,6 +22,8 @@ import {
   Eye,
   Star,
   Heart,
+  FolderSync,
+  Sparkles,
 } from 'lucide-react';
 import { FileItem, Folder } from '../../types';
 import { fileService, Breadcrumb, FolderDetails } from '../../services/files';
@@ -89,6 +91,37 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
   const [openFileMenu, setOpenFileMenu] = useState<string | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const autoSortInputRef = useRef<HTMLInputElement>(null);
+
+  const handleAutoSortUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    setUploading(true);
+    setUploadProgress(0);
+
+    try {
+      for (let i = 0; i < files.length; i++) {
+        await fileService.uploadFile(
+          files[i],
+          null,
+          (pct) => {
+            const overall = Math.round(((i + pct / 100) / files.length) * 100);
+            setUploadProgress(overall);
+          },
+          true
+        );
+      }
+      await loadFolder(currentFolderId);
+      await refreshUser();
+    } catch (err: any) {
+      alert(err.response?.data?.detail || 'Auto-sort upload failed.');
+    } finally {
+      setUploading(false);
+      setUploadProgress(0);
+      if (autoSortInputRef.current) autoSortInputRef.current.value = '';
+    }
+  };
 
   const loadFolder = async (folderId: string) => {
     setLoading(true);
@@ -354,6 +387,13 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
             multiple
             className="hidden"
           />
+          <input
+            type="file"
+            ref={autoSortInputRef}
+            onChange={handleAutoSortUpload}
+            multiple
+            className="hidden"
+          />
 
           {/* View toggle */}
           <div className="flex items-center bg-slate-100 dark:bg-slate-800 rounded-xl p-0.5">
@@ -387,6 +427,16 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
           >
             <Plus className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
             <span>New Folder</span>
+          </button>
+
+          <button
+            onClick={() => autoSortInputRef.current?.click()}
+            disabled={uploading}
+            className="flex items-center gap-1.5 px-3.5 py-2 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 text-xs font-bold rounded-xl transition-all shadow-xs disabled:opacity-50"
+            title="Upload multiple files and automatically sort them into Images, Videos, Music, and Documents folders"
+          >
+            <FolderSync className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+            <span>Auto-Sort</span>
           </button>
 
           <button

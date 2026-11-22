@@ -25,14 +25,73 @@ from app.services.storage_service import get_storage_service
 
 class FileService:
     @staticmethod
+    def classify_filename_category(filename: str, mime: str = "") -> str:
+        """Determines default destination folder category from filename and MIME type."""
+        lower = filename.lower()
+        mime = mime.lower()
+        image_exts = [".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg", ".bmp", ".ico", ".tiff", ".heic"]
+        video_exts = [".mp4", ".mov", ".mkv", ".webm", ".avi", ".flv", ".wmv", ".m4v"]
+        audio_exts = [".mp3", ".wav", ".aac", ".flac", ".ogg", ".m4a", ".wma"]
+
+        if mime.startswith("image/") or any(lower.endswith(ext) for ext in image_exts):
+            return "Images"
+        if mime.startswith("video/") or any(lower.endswith(ext) for ext in video_exts):
+            return "Videos"
+        if mime.startswith("audio/") or any(lower.endswith(ext) for ext in audio_exts):
+            return "Music"
+        return "Documents"
+
+    @staticmethod
+    async def get_or_create_category_folder(db: AsyncSession, user_id: str, category_name: str) -> Folder:
+        """Ensures the root category folder exists for the user."""
+        color_map = {
+            "Images": "#EF4444",
+            "Videos": "#8B5CF6",
+            "Documents": "#10B981",
+            "Music": "#F59E0B",
+        }
+        stmt = select(Folder).where(
+            Folder.user_id == user_id,
+            Folder.name == category_name,
+            Folder.parent_id == None,
+            Folder.is_deleted == False,
+        )
+        res = await db.execute(stmt)
+        folder = res.scalar_one_or_none()
+        if not folder:
+            folder = Folder(
+                user_id=user_id,
+                parent_id=None,
+                name=category_name,
+                path=f"/{category_name}/",
+                color=color_map.get(category_name, "#4F46E5"),
+            )
+            db.add(folder)
+            await db.flush()
+        return folder
+
+    @staticmethod
     async def upload_file(
         db: AsyncSession,
         user: User,
         upload_file: UploadFile,
         folder_id: Optional[str] = None,
+        auto_sort: bool = False,
     ) -> File:
-        # Validate target folder if specified
-        if folder_id:
+        clean_name = os.path.basename(upload_file.filename or "untitled")
+        guessed_mime = (
+            upload_file.content_type
+            or mimetypes.guess_type(clean_name)[0]
+            or "application/octet-stream"
+        )
+
+        # Handle intelligent auto-sorting
+        if auto_sort or folder_id == "auto":
+            target_cat = FileService.classify_filename_category(clean_name, guessed_mime)
+            cat_folder = await FileService.get_or_create_category_folder(db, user.id, target_cat)
+            folder_id = cat_folder.id
+        elif folder_id:
+            # Validate target folder if specified
             fol_stmt = select(Folder).where(
                 Folder.id == folder_id,
                 Folder.user_id == user.id,
@@ -45,7 +104,6 @@ class FileService:
                     detail="Target folder not found.",
                 )
 
-        clean_name = os.path.basename(upload_file.filename or "untitled")
         unique_id = uuid.uuid4().hex
         storage_key = f"{user.id}/{unique_id}_{clean_name}"
 
