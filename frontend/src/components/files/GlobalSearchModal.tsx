@@ -108,6 +108,18 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({
     }
   };
 
+  const handleToggleFavorite = async (e: React.MouseEvent, file: FileItem) => {
+    e.stopPropagation();
+    try {
+      setResults((prev) =>
+        prev.map((f) => (f.id === file.id ? { ...f, is_favorite: !f.is_favorite } : f))
+      );
+      await fileService.toggleFavorite(file.id, file.is_favorite);
+    } catch (err) {
+      console.error('Failed to toggle favorite', err);
+    }
+  };
+
   const getFileIcon = (mime: string) => {
     if (mime.startsWith('image/')) return <ImageIcon className="w-4 h-4 text-rose-500" />;
     if (mime.startsWith('video/')) return <Video className="w-4 h-4 text-purple-500" />;
@@ -245,6 +257,17 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({
 
                   {/* Actions */}
                   <div className="flex items-center gap-1 shrink-0">
+                    <button
+                      onClick={(e) => handleToggleFavorite(e, file)}
+                      title={file.is_favorite ? 'Remove from favorites' : 'Add to favorites'}
+                      className={`p-2 rounded-xl transition-colors ${
+                        file.is_favorite
+                          ? 'text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-950/40'
+                          : 'text-slate-400 hover:text-amber-500 hover:bg-white dark:hover:bg-slate-800'
+                      }`}
+                    >
+                      <Star className={`w-4 h-4 ${file.is_favorite ? 'fill-amber-400 text-amber-400' : ''}`} />
+                    </button>
                     {onPreviewFile && (
                       <button
                         onClick={(e) => {

@@ -20,6 +20,8 @@ import {
   Search,
   History,
   Eye,
+  Star,
+  Heart,
 } from 'lucide-react';
 import { FileItem, Folder } from '../../types';
 import { fileService, Breadcrumb, FolderDetails } from '../../services/files';
@@ -91,6 +93,17 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
   const loadFolder = async (folderId: string) => {
     setLoading(true);
     try {
+      if (onlyFavorites) {
+        const favFiles = await fileService.listFiles({ only_favorites: true });
+        setData({
+          folder: null,
+          breadcrumbs: [{ id: 'root', name: 'Favorites', path: '/' }],
+          subfolders: [],
+          files: favFiles,
+        });
+        setCurrentFolderId('root');
+        return;
+      }
       const res = await fileService.getFolderDetails(folderId);
       setData(res);
       setCurrentFolderId(folderId);
@@ -98,6 +111,37 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
       console.error('Error loading folder', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleToggleFavorite = async (file: FileItem) => {
+    try {
+      // Optimistic UI update
+      setData((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          files: prev.files.map((f) =>
+            f.id === file.id ? { ...f, is_favorite: !f.is_favorite } : f
+          ),
+        };
+      });
+
+      const updated = await fileService.toggleFavorite(file.id, file.is_favorite);
+
+      // If viewing favorites tab and item was un-favorited, filter it out
+      if (onlyFavorites && !updated.is_favorite) {
+        setData((prev) => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            files: prev.files.filter((f) => f.id !== file.id),
+          };
+        });
+      }
+    } catch (err) {
+      console.error('Failed to toggle favorite', err);
+      await loadFolder(currentFolderId);
     }
   };
 
@@ -485,8 +529,16 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
             </h4>
 
             {filteredFiles.length === 0 ? (
-              <div className="bg-white dark:bg-slate-900 rounded-2xl p-8 border border-slate-100 dark:border-slate-800 text-center text-xs text-slate-400 dark:text-slate-500">
-                No files in this folder yet.
+              <div className="bg-white dark:bg-slate-900 rounded-2xl p-12 border border-slate-100 dark:border-slate-800 text-center">
+                {onlyFavorites ? (
+                  <div className="space-y-2">
+                    <Star className="w-8 h-8 text-amber-400 mx-auto opacity-40 fill-amber-400" />
+                    <p className="text-sm font-bold text-slate-700 dark:text-slate-200">No favorite files yet</p>
+                    <p className="text-xs text-slate-400">Click the star icon on any file to quickly access it from here.</p>
+                  </div>
+                ) : (
+                  <p className="text-xs text-slate-400 dark:text-slate-500">No files in this folder yet.</p>
+                )}
               </div>
             ) : viewMode === 'list' ? (
               /* ── List View ── */
@@ -524,6 +576,20 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
                         </td>
                         <td className="py-3 px-4">
                           <div className="flex items-center gap-3">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleToggleFavorite(file);
+                              }}
+                              title={file.is_favorite ? 'Remove from favorites' : 'Add to favorites'}
+                              className={`p-1 rounded-lg transition-all ${
+                                file.is_favorite
+                                  ? 'text-amber-400 hover:text-amber-500'
+                                  : 'text-slate-300 dark:text-slate-600 hover:text-amber-400 opacity-0 group-hover:opacity-100'
+                              }`}
+                            >
+                              <Star className={`w-4 h-4 ${file.is_favorite ? 'fill-amber-400 text-amber-400' : ''}`} />
+                            </button>
                             <div className="p-2 rounded-xl bg-slate-50 dark:bg-slate-800 shrink-0">
                               {getFileIcon(file.mime_type)}
                             </div>
@@ -553,6 +619,17 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
                         </td>
                         <td className="py-3 px-4 text-right">
                           <div className="flex items-center justify-end gap-0.5">
+                            <button
+                              onClick={() => handleToggleFavorite(file)}
+                              className={`p-1.5 rounded-lg transition-colors ${
+                                file.is_favorite
+                                  ? 'text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-950/40'
+                                  : 'text-slate-400 hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-950/40'
+                              }`}
+                              title={file.is_favorite ? 'Remove from favorites' : 'Add to favorites'}
+                            >
+                              <Star className={`w-4 h-4 ${file.is_favorite ? 'fill-amber-400 text-amber-400' : ''}`} />
+                            </button>
                             <button
                               onClick={() => setPreviewTarget(file)}
                               className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
@@ -613,6 +690,22 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
                     key={file.id}
                     className="relative bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-100 dark:border-slate-800 hover:shadow-lg dark:hover:shadow-slate-950/60 hover:scale-[1.02] transition-all duration-200 group"
                   >
+                    {/* Favorite Button (Top Left) */}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleToggleFavorite(file);
+                      }}
+                      title={file.is_favorite ? 'Remove from favorites' : 'Add to favorites'}
+                      className={`absolute top-3 left-3 z-10 p-1.5 rounded-xl backdrop-blur-md transition-all ${
+                        file.is_favorite
+                          ? 'bg-amber-50 dark:bg-amber-950/60 text-amber-500 opacity-100 shadow-xs'
+                          : 'bg-white/80 dark:bg-slate-800/80 text-slate-300 hover:text-amber-500 opacity-0 group-hover:opacity-100'
+                      }`}
+                    >
+                      <Star className={`w-3.5 h-3.5 ${file.is_favorite ? 'fill-amber-400 text-amber-400' : ''}`} />
+                    </button>
+
                     {/* Dots menu */}
                     <div className="absolute top-3 right-3">
                       <button
@@ -628,6 +721,17 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
                       {/* Dropdown */}
                       {openFileMenu === file.id && (
                         <div className="absolute right-0 top-8 z-20 w-40 bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 shadow-xl py-1">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleToggleFavorite(file);
+                              setOpenFileMenu(null);
+                            }}
+                            className="w-full flex items-center gap-2 px-3 py-2 text-xs text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+                          >
+                            <Star className={`w-3.5 h-3.5 ${file.is_favorite ? 'fill-amber-400 text-amber-400' : ''}`} />
+                            {file.is_favorite ? 'Remove Favorite' : 'Favorite'}
+                          </button>
                           <button
                             onClick={(e) => {
                               e.stopPropagation();

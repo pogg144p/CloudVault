@@ -9,6 +9,7 @@ import {
   Loader2,
   ExternalLink,
   AlertCircle,
+  Star,
 } from 'lucide-react';
 import { FileItem } from '../../types';
 import { fileService } from '../../services/files';
@@ -36,6 +37,22 @@ export const FilePreviewModal: React.FC<FilePreviewModalProps> = ({
   const [loading, setLoading] = useState(false);
   const [previewError, setPreviewError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [isFavorite, setIsFavorite] = useState(file?.is_favorite ?? false);
+
+  useEffect(() => {
+    setIsFavorite(file?.is_favorite ?? false);
+  }, [file]);
+
+  const handleToggleFavorite = async () => {
+    if (!file) return;
+    try {
+      const next = !isFavorite;
+      setIsFavorite(next);
+      await fileService.toggleFavorite(file.id, isFavorite);
+    } catch (err) {
+      setIsFavorite(isFavorite);
+    }
+  };
 
   useEffect(() => {
     let activeBlobUrl: string | null = null;
@@ -193,6 +210,20 @@ export const FilePreviewModal: React.FC<FilePreviewModalProps> = ({
           </div>
 
           <div className="flex items-center gap-2 shrink-0">
+            {/* Toggle Favorite */}
+            <button
+              onClick={handleToggleFavorite}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                isFavorite
+                  ? 'bg-amber-50 dark:bg-amber-950/60 text-amber-500 hover:bg-amber-100'
+                  : 'bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-amber-500 hover:bg-slate-200 dark:hover:bg-slate-700'
+              }`}
+              title={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+            >
+              <Star className={`w-3.5 h-3.5 ${isFavorite ? 'fill-amber-400 text-amber-400' : ''}`} />
+              <span className="hidden sm:inline">{isFavorite ? 'Favorited' : 'Favorite'}</span>
+            </button>
+
             {isText && textContent && (
               <button
                 onClick={handleCopyText}
