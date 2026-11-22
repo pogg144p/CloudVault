@@ -28,11 +28,11 @@ class Settings(BaseSettings):
     S3_ACCESS_KEY: str = "minioadmin"
     S3_SECRET_KEY: str = "minioadmin"
     S3_BUCKET_NAME: str = "cloudvault-bucket"
-    S3_REGION: str = "auto"  # Cloudflare R2 uses "auto"
+    S3_REGION: str = "us-east-1"
     S3_SECURE: bool = False
 
-    # Storage Quota: 650 MB per user (10 GB Cloudflare R2 free tier ÷ 15 users, with 250 MB buffer)
-    DEFAULT_STORAGE_QUOTA_BYTES: int = 650 * 1024 * 1024
+    # Storage Quota: 100 MB per user (supports ~10 users on Supabase free 1GB tier)
+    DEFAULT_STORAGE_QUOTA_BYTES: int = 100 * 1024 * 1024
 
     # CORS — add your Render frontend URL via FRONTEND_URL env var in production
     FRONTEND_URL: str = ""
