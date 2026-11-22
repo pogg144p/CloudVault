@@ -7,6 +7,7 @@ from app.api.v1.router import api_router
 from app.core.config import settings
 from app.core.database import init_db
 from app.core.metrics import PrometheusMiddleware, metrics_endpoint_handler
+from app.core.security_firewall import firewall
 
 tags_metadata = [
     {
@@ -109,6 +110,35 @@ app.add_middleware(
 
 # Prometheus Telemetry Middleware
 app.add_middleware(PrometheusMiddleware)
+
+
+@app.middleware("http")
+async def security_firewall_middleware(request: Request, call_next):
+    """Cloud Networking & Security Firewall: Inspects client IP against WAF & DDoS rate limiter."""
+    path = request.url.path
+    # Bypass health check, metrics scrape, and swagger docs from WAF blocks
+    if path in ("/health", "/metrics", "/", "/favicon.ico") or path.startswith("/api/v1/docs") or path.startswith("/api/v1/openapi.json"):
+        return await call_next(request)
+
+    # Extract real client IP
+    forwarded = request.headers.get("x-forwarded-for")
+    client_ip = forwarded.split(",")[0].strip() if forwarded else (request.client.host if request.client else "127.0.0.1")
+    geo_country = request.headers.get("cf-ipcountry") or request.headers.get("x-geo-country") or "IN"
+
+    is_allowed, block_reason = firewall.evaluate_request(client_ip, geo_country)
+    if not is_allowed:
+        status_code = status.HTTP_429_TOO_MANY_REQUESTS if "Rate limit" in (block_reason or "") else status.HTTP_403_FORBIDDEN
+        return JSONResponse(
+            status_code=status_code,
+            content={
+                "detail": block_reason or "Access Denied by Security Policy",
+                "status_code": status_code,
+                "client_ip": client_ip,
+                "firewall_action": "BLOCKED",
+            },
+        )
+
+    return await call_next(request)
 
 
 @app.exception_handler(HTTPException)

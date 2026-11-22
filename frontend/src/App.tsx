@@ -8,6 +8,10 @@ import { PublicShareView } from './components/files/PublicShareView';
 import { TrashView } from './components/files/TrashView';
 import { CategoryView } from './components/files/CategoryView';
 import { SystemHealthView } from './components/system/SystemHealthView';
+import { SecurityView } from './components/security/SecurityView';
+import { GlobalSearchModal } from './components/files/GlobalSearchModal';
+import { FilePreviewModal } from './components/files/FilePreviewModal';
+import { FileItem } from './types';
 import { useAuth } from './context/AuthContext';
 
 export const App: React.FC = () => {
@@ -26,6 +30,20 @@ export const App: React.FC = () => {
   const [currentTab, setCurrentTab] = useState(initialRoute.tab);
   const [selectedFolderId, setSelectedFolderId] = useState<string>(initialRoute.folderId);
   const [searchQuery, setSearchQuery] = useState('');
+  const [globalSearchOpen, setGlobalSearchOpen] = useState(false);
+  const [previewingFile, setPreviewingFile] = useState<FileItem | null>(null);
+
+  // Global Ctrl + K / Cmd + K listener
+  useEffect(() => {
+    const handleGlobalKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setGlobalSearchOpen((prev) => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleGlobalKeyDown);
+    return () => window.removeEventListener('keydown', handleGlobalKeyDown);
+  }, []);
 
   // Detect ?share=TOKEN in the URL for public share page routing
   const [publicShareToken, setPublicShareToken] = useState<string | null>(null);
@@ -160,6 +178,8 @@ export const App: React.FC = () => {
         return 'Trash';
       case 'health':
         return 'System Health & DevOps Telemetry';
+      case 'security':
+        return 'Cloud Networking & Security Center';
       default:
         return 'CloudVault';
     }
@@ -183,6 +203,7 @@ export const App: React.FC = () => {
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
           onUploadClick={handleUploadClick}
+          onOpenGlobalSearch={() => setGlobalSearchOpen(true)}
         />
 
         <main className="flex-1 overflow-y-auto p-6 lg:p-8 bg-gradient-to-br from-slate-50 via-white to-indigo-50/30 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950/20 scroll-smooth transition-colors">
@@ -215,6 +236,8 @@ export const App: React.FC = () => {
             <TrashView />
           ) : currentTab === 'health' ? (
             <SystemHealthView />
+          ) : currentTab === 'security' ? (
+            <SecurityView />
           ) : (
             <div className="bg-white rounded-3xl p-12 border border-slate-100 text-center max-w-xl mx-auto mt-12">
               <h2 className="text-xl font-bold text-slate-800 capitalize mb-2">
@@ -228,7 +251,22 @@ export const App: React.FC = () => {
         </main>
       </div>
 
-      {/* No auth modal needed here — user is already logged in */}
+      {/* ── Global Search Command Palette (Ctrl+K) ── */}
+      <GlobalSearchModal
+        isOpen={globalSearchOpen}
+        onClose={() => setGlobalSearchOpen(false)}
+        onNavigateToFolder={handleNavigateToFolder}
+        onPreviewFile={(file) => setPreviewingFile(file)}
+      />
+
+      {/* ── File Preview Modal ── */}
+      {previewingFile && (
+        <FilePreviewModal
+          file={previewingFile}
+          isOpen={!!previewingFile}
+          onClose={() => setPreviewingFile(null)}
+        />
+      )}
     </div>
   );
 };

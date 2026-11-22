@@ -15,6 +15,9 @@ import {
   ChevronRight,
   Settings,
   Activity,
+  LogOut,
+  Crown,
+  ShieldCheck,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { ProfileSettingsModal } from '../settings/ProfileSettingsModal';
@@ -52,6 +55,7 @@ const NAV_SECTIONS = [
     adminOnly: true,
     items: [
       { id: 'health',     label: 'System Health', icon: Activity },
+      { id: 'security',   label: 'Security & WAF', icon: ShieldCheck },
     ],
   },
 ];
@@ -62,7 +66,7 @@ function formatBytes(bytes: number): string {
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({ currentTab, onTabChange }) => {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const [settingsOpen, setSettingsOpen] = useState(false);
 
   const used  = user?.storage_used_bytes  ?? 0;
@@ -158,13 +162,57 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentTab, onTabChange }) => 
         </div>
       </div>
 
+      {/* ── User Profile Card (Above Settings) ── */}
+      {user && (
+        <div className="px-3 pt-2 pb-1">
+          <div className="flex items-center gap-2.5 p-2 rounded-2xl border border-slate-100 dark:border-slate-800/80 bg-slate-50/70 dark:bg-slate-800/50 hover:bg-slate-100/70 dark:hover:bg-slate-800 transition-all group">
+            {/* Clickable Profile trigger */}
+            <button
+              onClick={() => setSettingsOpen(true)}
+              className="flex items-center gap-2.5 flex-1 min-w-0 text-left"
+              title="Open Account & Profile Settings"
+            >
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold shadow-sm shadow-indigo-300/40 dark:shadow-none shrink-0 overflow-hidden">
+                {user.avatar_url ? (
+                  <img src={user.avatar_url} alt="" className="w-full h-full object-cover" />
+                ) : (
+                  (user.full_name || user.email).charAt(0).toUpperCase()
+                )}
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-1.5">
+                  <p className="text-xs font-bold text-slate-800 dark:text-slate-100 truncate group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                    {user.full_name || 'My Profile'}
+                  </p>
+                  {user.is_superuser && (
+                    <span title="Administrator">
+                      <Crown className="w-3 h-3 text-amber-500 shrink-0" />
+                    </span>
+                  )}
+                </div>
+                <p className="text-[10px] text-slate-400 truncate">{user.email}</p>
+              </div>
+            </button>
+
+            {/* Quick Logout Button */}
+            <button
+              onClick={logout}
+              title="Sign Out"
+              className="p-1.5 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors shrink-0"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* ── Settings link ── */}
-      <div className="px-3 pb-4">
+      <div className="px-3 pb-3 pt-1">
         <button
           onClick={() => setSettingsOpen(true)}
-          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-semibold text-slate-400 hover:text-slate-700 hover:bg-slate-50 transition-all"
+          className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-[13px] font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-all"
         >
-          <span className="p-1.5 rounded-lg bg-slate-100 text-slate-400">
+          <span className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500">
             <Settings className="w-4 h-4" />
           </span>
           <span>Settings</span>

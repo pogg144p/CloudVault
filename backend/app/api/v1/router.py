@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from app.api.v1.endpoints import admin, auth, dashboard, files, folders, shares, system, trash, users
+from app.api.v1.endpoints import admin, auth, dashboard, files, folders, security, shares, system, trash, users
 
 api_router = APIRouter()
 api_router.include_router(auth.router, prefix="/auth", tags=["Authentication"])
@@ -11,3 +11,4 @@ api_router.include_router(files.router, prefix="/files", tags=["Files"])
 api_router.include_router(shares.router, prefix="/shares", tags=["Shares"])
 api_router.include_router(trash.router, prefix="/trash", tags=["Recycle Bin"])
 api_router.include_router(system.router, prefix="/system", tags=["System & DevOps Telemetry"])
+api_router.include_router(security.router, prefix="/security", tags=["Cloud Networking & Security"])
